@@ -4,12 +4,12 @@ import { GetServerSideProps, NextPage } from 'next';
 import { getSession } from 'next-auth/react';
 import getErc20LogoAddress from 'utils/getErc20LogoAddress';
 import Moralis from 'moralis';
-import { ERC20Balances, IERC20Balances } from 'components/templates/balances/ERC20';
+import { XProxy } from 'components/templates/xenExtension/xProxy';
 
-const ERC20: NextPage<IERC20Balances> = (props) => {
+const XProxyPage: NextPage<any> = (props) => {
   return (
-    <Default pageName="ERC20 Balances">
-      <ERC20Balances {...props} />
+    <Default pageName="XProxy Information">
+      <XProxy {...props} />
     </Default>
   );
 };
@@ -47,4 +47,4 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   };
 };
 
-export default ERC20;
+export default XProxyPage;

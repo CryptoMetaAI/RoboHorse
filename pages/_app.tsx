@@ -25,7 +25,7 @@ const theme = extendTheme({ config });
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
 
-  function getLibrary(provider_) {
+  function getLibrary(provider_: any) {
     return new Web3(provider_)
   }
 

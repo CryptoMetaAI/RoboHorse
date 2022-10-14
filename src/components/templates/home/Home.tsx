@@ -1,14 +1,16 @@
 import { Heading, VStack } from '@chakra-ui/react';
-import { Container, Button } from '@chakra-ui/react';
+import { Container, Button, Tabs, TabList, TabPanels, Tab, TabPanel, Tooltip } from '@chakra-ui/react';
 import { InjectedConnector } from '@web3-react/injected-connector';
 import { useWeb3React } from "@web3-react/core";
-import { ERC20Balances } from 'components/templates/balances/ERC20';
+import { XProxy } from 'components/templates/xenExtension/xProxy';
+import { XNFTs } from 'components/templates/xenExtension/xNFT';
+import { chainId2NetworkName } from 'utils/config';
 
 const Home = () => {
   const { active, account, library, chainId, activate, deactivate } = useWeb3React()
   
   const injected = new InjectedConnector({
-    supportedChainIds: [513100, 10001],
+    supportedChainIds: [1, 56, 97, 137, 80001],
   })
 
   async function connect() {
@@ -37,16 +39,35 @@ const Home = () => {
   }
 
   return (
-    <VStack w={'full'}>
+    <VStack w='full'>
       <Heading size="md" marginBottom={6}>
-        <Button onClick={() => wallet()} colorScheme='teal' variant='outline'>
-          {active ? <span><b>{account}</b></span> : <span>Connect to MetaMask(Only support EthereumPoW/EthereumFair)</span>}
-        </Button>        
+        <Tooltip label={'Supported network: Ethereum, BSC & BSC-Testnet, Polygon'}>
+          <Button onClick={() => wallet()} colorScheme='teal' variant='outline'>
+            {active ? <span>{chainId2NetworkName[chainId || 0]}: <b>{account}</b></span> : <span>Connect to MetaMask</span>}
+          </Button>  
+        </Tooltip>      
       </Heading>
 
-      <Container maxW="100%" p={3} marginTop={100} as="main" minH="70vh">
-        <ERC20Balances account={account} web3={library} chainId={chainId}/>
-      </Container>
+      
+      <Tabs width="150%">
+        <TabList>
+          <Tab>xProxy</Tab>
+          <Tab>xNFT</Tab>
+        </TabList>
+
+        <TabPanels>
+          <TabPanel>
+            <Container maxW="100%" width="150%" p={3} marginTop={100} as="main" minH="70vh">
+              <XProxy account={account || ''} web3={library} chainId={chainId || 0}/>
+            </Container>
+          </TabPanel>
+          <TabPanel>
+            <Container maxW="100%" width="150%"  p={3} marginTop={100} as="main" minH="70vh">
+              <XNFTs account={account || ''} web3={library} chainId={chainId || 0}/>
+            </Container>
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
     </VStack>
   );
 };

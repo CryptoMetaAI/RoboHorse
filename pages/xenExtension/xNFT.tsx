@@ -1,13 +1,13 @@
 import { Default } from 'components/layouts/Default';
 import { GetServerSideProps, NextPage } from 'next';
 import { getSession } from 'next-auth/react';
-import { ITransactions, Transactions } from 'components/templates/transactions';
+import { XNFTs } from 'components/templates/xenExtension/xNFT';
 import Moralis from 'moralis';
 
-const TransactionsPage: NextPage<ITransactions> = (props) => {
+const XNFTPage: NextPage<any> = (props) => {
   return (
-    <Default pageName="Transactions">
-      <Transactions {...props} />
+    <Default pageName="XNFT Information">
+      <XNFTs {...props} />
     </Default>
   );
 };
@@ -21,16 +21,18 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     return { props: { error: 'Connect your wallet first' } };
   }
 
-  const transactions = await Moralis.EvmApi.account.getTransactions({
+  const balances = await Moralis.EvmApi.account.getNFTs({
     address: session?.user.address,
     chain: process.env.APP_CHAIN_ID,
   });
 
+  // (balances.result).filter((balance)=> balance.result.)
+
   return {
     props: {
-      transactions: JSON.parse(JSON.stringify(transactions.result)),
+      balances: JSON.parse(JSON.stringify(balances.result)),
     },
   };
 };
 
-export default TransactionsPage;
+export default XNFTPage;

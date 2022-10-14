@@ -1,17 +1,17 @@
 import { useColorMode } from '@chakra-ui/react';
 import Image from 'next/image';
 
-const MoralisLogo = () => {
+const XNFTLogo = () => {
   const { colorMode } = useColorMode();
 
   return (
     <Image
-      src={colorMode === 'dark' ? '/Moralis-DarkBG.svg' : '/Moralis-LightBG.svg'}
+      src={colorMode === 'dark' ? '/logo.png' : '/logo.png'}
       height={45}
-      width={150}
-      alt="Moralis"
+      width={45}
+      alt="XNFT"
     />
   );
 };
 
-export default MoralisLogo;
+export default XNFTLogo;

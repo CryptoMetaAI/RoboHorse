@@ -1,9 +1,16 @@
 .table-tiny th,
 .table-tiny td {
-  padding-left: 4px;
-  padding-right: 4px;
+  width: 50px;
+  text-align: center;
 }
 
 table {
   margin-top: 20px;
+  width: 80%;
+}
+
+body {
+  padding: 20px 20px 60px;
+  max-width: 100%;
+  margin: 0 auto;
 }

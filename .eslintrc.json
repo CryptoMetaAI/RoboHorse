@@ -1,6 +1,10 @@
 {
   "extends": "@moralisweb3",
   "rules": {
-    "no-console": "off"
+    "no-console": "off",
+    "prefer-destructuring": ["error", {"object": false, "array": false}],
+    "@typescript-eslint/no-inferrable-types": "off",
+    "@typescript-eslint/no-explicit-any": ["off"],
+    "complexity": ["error", 20]
   }
 }
