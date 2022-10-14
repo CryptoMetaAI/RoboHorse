@@ -52,7 +52,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
   const [proxyList, setProxyList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isClaiming, setIsClaiming] = useState<any>({});
-  const [isMinting] = useState<any>({});
+  const [isMinting, setIsMinting] = useState<any>({});
   const [xen, setXen] =useState<any>(null);
   const [xNFT, setXNFT] =useState<any>(null);
   const [rewardCalculator, setRewardCalculator] =useState<any>(null);
@@ -334,7 +334,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
   const setMintInfo = (address: string, bMinting: boolean) => {
     const mintingInfo: any = {}
     mintingInfo[address] = bMinting;
-    setIsClaiming(mintingInfo);
+    setIsMinting(mintingInfo);
   }
 
   const updateOneProxy = (proxyInfo: any) => {
