@@ -6,7 +6,7 @@ const Footer = () => {
     <Box textAlign={'center'} w="full" p={6}>      
       <Text>
         🙋 You have questions? Ask in the{' '}
-        <Link href={"https://discord.gg/VQ8EA78w"} isExternal alignItems={'center'}>
+        <Link href={"https://discord.gg/M4sJRzKp"} isExternal alignItems={'center'}>
           Discord <ExternalLinkIcon />
         </Link>
       </Text>

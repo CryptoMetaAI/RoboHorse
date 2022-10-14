@@ -363,7 +363,9 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
           </HStack>
           <HStack spacing='18px'>
             <Button colorScheme='teal' variant='outline' onClick={getAllProxies}>Refresh</Button>
-            <Button colorScheme='teal' variant='outline' onClick={onOpen}>Create xProxy</Button>
+            <Tooltip label={'xProxy is a proxy contract which could help you to mint XEN, and you can create many xProxy using one EOA.'}>
+              <Button colorScheme='teal' variant='outline' onClick={onOpen}>Create xProxy</Button>
+            </Tooltip>
           </HStack>
         </HStack>
       </Heading>
