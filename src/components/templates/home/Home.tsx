@@ -41,11 +41,11 @@ const Home = () => {
   return (
     <VStack w='full'>
       <Heading size="md" marginBottom={6}>
-        <Tooltip label={'Supported network: Ethereum, BSC & BSC-Testnet, Polygon'}>
+        <Tooltip label={'Current supported network: BSC-Testnet, and the mainnet of Ethereum, BSC and Polygon will be supported soon.'}>
           <Button onClick={() => wallet()} colorScheme='teal' variant='outline'>
             {active ? <span>{chainId2NetworkName[chainId || 0]}: <b>{account}</b></span> : <span>Connect to MetaMask</span>}
           </Button>  
-        </Tooltip>      
+        </Tooltip>  
       </Heading>
 
       

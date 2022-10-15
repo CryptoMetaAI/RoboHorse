@@ -4,13 +4,13 @@
   text-align: center;
 }
 
-table {
+/* table {
   margin-top: 20px;
   width: 80%;
-}
-
+} 
+*/
 body {
-  padding: 20px 20px 60px;
+  /* padding: 20px 20px 0px; */
   max-width: 100%;
   margin: 0 auto;
 }

@@ -305,7 +305,7 @@ const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
           <HStack spacing='18px'>
             <div>xNFT List</div>
             <Checkbox colorScheme='teal' onChange={(e) => setBMineNFT(e.target.checked)}>Only Mine</Checkbox>
-            <Tooltip label={`Filter xRobot Address: ${robotAddress}`}>
+            <Tooltip label={`Filter xProxy Address: ${robotAddress}`}>
               <Button colorScheme='teal' variant='ghost' onClick={modal1.onOpen}><Icon as={AiOutlineFilter} w={6} h={6}/></Button>   
             </Tooltip>         
           </HStack>
@@ -378,11 +378,11 @@ const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Filter xRobot</ModalHeader>
+          <ModalHeader>Filter xProxy</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             <FormControl>
-              <FormLabel>Address of xRobot</FormLabel>
+              <FormLabel>Address of xProxy</FormLabel>
               <Input value={tmpRobotAddress} onChange={(e) => setTmpRobotAddress(e.target.value)}/>
             </FormControl>
           </ModalBody>

@@ -25,7 +25,7 @@ import {
   ModalCloseButton,
   FormControl,
   FormLabel,
-  Input
+  Input,
 } from '@chakra-ui/react';
 import React, { FC, useEffect, useState } from 'react';
 import { getEllipsisTxt } from 'utils/format';
@@ -48,6 +48,7 @@ type Web3Info = {
 const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
   const hoverTrColor = useColorModeValue('gray.100', 'gray.700');
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const xProxyPopover = useDisclosure()
 
   const [proxyList, setProxyList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -71,6 +72,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
       setXen(new web3.eth.Contract(XEN, xenAddr[chainId]));
       setXNFT(new web3.eth.Contract(XNFT, xNFTAddr[chainId]));
       setRewardCalculator(new web3.eth.Contract(RewardCalculator, rewardCalculatorAddr[chainId]));
+      xProxyPopover.onOpen();
     }
   }, [web3])
 
@@ -152,6 +154,10 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
           console.log(proxiesInfo);
           setProxyList(proxiesInfo);
         }
+      }
+
+      if (proxyAddrs.length === 0) {
+        xProxyPopover.onOpen();
       }
       proxyAddrs.forEach((proxyAddr: string) => {
         getOneProxy(proxyAddr, callbackFunc);

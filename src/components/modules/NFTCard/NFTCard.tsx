@@ -114,9 +114,9 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, tokenId, owner, attributes
   }, [transferDirection, shareOut]);
 
   const withdrawReward = (tId: number) => {
-    console.log(xNFT);
+    console.log(tId);
     const contractFunc = xNFT.methods['withdrawReward']; 
-    const data = contractFunc([tId]).encodeABI();
+    const data = contractFunc(tId).encodeABI();
     const tx = {
         from: account,
         to: xNFT._address,
@@ -124,7 +124,7 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, tokenId, owner, attributes
         value: 0,
         gasLimit: 0
     }
-    contractFunc([tId]).estimateGas({from: account}).then((gasLimit: any) => {
+    contractFunc(tId).estimateGas({from: account}).then((gasLimit: any) => {
       tx.gasLimit = gasLimit;
       web3.eth.sendTransaction(tx)
           .on('transactionHash', () => {
