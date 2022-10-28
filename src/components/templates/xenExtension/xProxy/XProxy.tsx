@@ -29,10 +29,10 @@ import {
 } from '@chakra-ui/react';
 import React, { FC, useEffect, useState } from 'react';
 import { getEllipsisTxt } from 'utils/format';
-import XEN from '../ABI/xen.json';
-import XProxyABI from '../ABI/xProxy.json';
-import XNFT from '../ABI/xNFT.json';
-import RewardCalculator from '../ABI/rewardCalculator.json';
+import XEN from 'abi/xen.json';
+import XProxyABI from 'abi/xProxy.json';
+import XNFT from 'abi/dNFT.json';
+import RewardCalculator from 'abi/rewardCalculator.json';
 import BigNumber from 'bignumber.js';
 import moment from 'moment';
 import {xenAddr, xNFTAddr, rewardCalculatorAddr} from 'utils/config';
@@ -58,6 +58,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
   const [xNFT, setXNFT] =useState<any>(null);
   const [rewardCalculator, setRewardCalculator] =useState<any>(null);
   const [globalRank, setGlobalRank] = useState<number>(0);
+  const [mintFee, setMintFee] = useState<number>(0);
   
   const toast = useToast();
 
@@ -86,6 +87,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
   useEffect(() => {
     if (xen != null) {
       getGlobalRank();
+      getMintFee();
     }
   }, [xen])
 
@@ -109,8 +111,8 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
     contractFunc().call({from: account}).then((mintInfo: any) => {
       contractFunc = rewardCalculator.methods["calculateMintReward"];
       contractFunc(mintInfo.rank, mintInfo.term, mintInfo.maturityTs, mintInfo.amplifier, mintInfo.eaaRate).call({from: account}).then((reward: any) => {
-        contractFunc = xProxy.methods['totalReward'];
-        contractFunc().call({from: account}).then((claimedReward: any) => {
+        contractFunc = xProxy.methods['mintedAmount'];
+        contractFunc().call({from: account}).then((mintedAmount: any) => {
           contractFunc = xNFT.methods["allTokensInSlot"];
           contractFunc(proxyAddr).call({from: account}).then((allNFTIds: any) => {
             contractFunc = xen.methods["balanceOf"];
@@ -118,10 +120,10 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
               const proxyInfo: any = {};
               proxyInfo.address = proxyAddr;
               proxyInfo.rank = mintInfo.rank;
-              proxyInfo.reward = claimedReward > 0 ? claimedReward : reward;
+              proxyInfo.reward = mintedAmount > 0 ? mintedAmount : reward;
               proxyInfo.term = mintInfo.term;
               proxyInfo.maturityTs = mintInfo.maturityTs;
-              proxyInfo.claimed = claimedReward > 0 || mintInfo.term === '0';
+              proxyInfo.claimed = mintedAmount > 0 || mintInfo.term === '0';
               proxyInfo.xNFTIds = allNFTIds;
               proxyInfo.balance = new BigNumber(balance).shiftedBy(-18).toNumber();
               callback(proxyInfo);
@@ -132,7 +134,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
     });
   }
   const getAllProxies = () => {
-    const contractFunc = xNFT.methods['getProxys'];
+    const contractFunc = xNFT.methods['getProxies'];
     let count: number = 0;
     contractFunc(account).call({from: account}).then((proxyAddrs: any) => {
       const proxiesInfo: any[] = [];
@@ -168,14 +170,15 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
   const createProxies = () => {
     const contractFunc = xNFT.methods['batchCreateProxy']; 
     const data = contractFunc(proxyNumber, termPerProxy).encodeABI();
+    const totalMintFee = `0x${new BigNumber(mintFee).multipliedBy(new BigNumber(proxyNumber)).toString(16)}`;
     const tx = {
         from: account,
         to: xNFTAddr[chainId],
         data,
-        value: 0,
+        value: totalMintFee,
         gasLimit: 0
     }
-    contractFunc(proxyNumber, termPerProxy).estimateGas({from: account}).then((gasLimit: any) => {
+    contractFunc(proxyNumber, termPerProxy).estimateGas({from: account, value: totalMintFee}).then((gasLimit: any) => {
       tx.gasLimit = gasLimit;
       web3.eth.sendTransaction(tx)
           .on('transactionHash', () => {
@@ -198,8 +201,27 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
           });
     });
   }
-  const mintXNFT = (proxyInfo: any) => {
-    const contractFunc = xNFT.methods['mintXNFT']; 
+
+  const getMintFee = () => {
+    const contractFunc = xen.methods['MintFee'];        
+      contractFunc().call({from: account}).then((result: any) => {
+        setMintFee(result);
+        console.log(result);
+      });
+  }
+
+  const burnMintDNFT = (proxyInfo: any) => {
+    if (!proxyInfo.claimed) {
+      toast({
+        title: 'Warning',
+        description: "Claim mint reward firstly.",
+        status: 'warning',
+        position: 'bottom-right',
+        isClosable: true,
+      });
+      return;
+    }
+    const contractFunc = xNFT.methods['burnXenInXProxy']; 
     const data = contractFunc(proxyInfo.address).encodeABI();
     const tx = {
         from: account,
@@ -362,15 +384,15 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
       <Heading size="lg" marginBottom={6}>
         <HStack justifyContent='space-between'>
           <HStack spacing='18px'>
-            <div>Your xProxy</div>
+            <div>Your Batch Minted Rank</div>
             <Tooltip label={'click to refresh the value'}>
               <Button colorScheme='teal' variant='outline' onClick={getGlobalRank}>globalRank = {globalRank}</Button>
             </Tooltip>
           </HStack>
           <HStack spacing='18px'>
             <Button colorScheme='teal' variant='outline' onClick={getAllProxies}>Refresh</Button>
-            <Tooltip label={'xProxy is a proxy contract which could help you to mint XEN, and you can create many xProxy using one EOA.'}>
-              <Button colorScheme='teal' variant='outline' onClick={onOpen}>Create xProxy</Button>
+            <Tooltip label={'Using proxy contract, you can mint multiple times using same account(EOA).'}>
+              <Button colorScheme='teal' variant='outline' onClick={onOpen}>Batch Mint</Button>
             </Tooltip>
           </HStack>
         </HStack>
@@ -444,7 +466,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
                         {
                           proxy.xNFTIds.length > 0 || parseInt(proxy.maturityTs) * 1000 < new Date().getTime() ? 
                             null :
-                            <Button colorScheme='teal' variant='outline' isLoading={isMinting[proxy.address]} loadingText='Minting' onClick={() => mintXNFT(proxy)}>Mint xNFT</Button>
+                            <Button colorScheme='teal' variant='outline' isLoading={isMinting[proxy.address]} loadingText='Minting' onClick={() => burnMintDNFT(proxy)}>Burn & Mint DNFT</Button>
                         }
                       </VStack>
                     </Td>
@@ -457,7 +479,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
           </TableContainer>
         </Box>
       ) : (
-        <Box>Looks Like you do not have any XEN Proxy</Box>
+        <Box>Looks Like you do not have any minted rank.</Box>
       )}
       <Modal
         initialFocusRef={initialRef}
@@ -467,22 +489,22 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Create XEN Proxies</ModalHeader>
+          <ModalHeader>Batch Mint XEN</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             <FormControl>
-              <FormLabel>Proxies Number</FormLabel>
+              <FormLabel>Total Mint</FormLabel>
               <Input ref={initialRef} onChange={handleProxyNumberChange} />
             </FormControl>
             <FormControl>
-              <FormLabel>Term Per Proxy</FormLabel>
+              <FormLabel>Term Per Mint</FormLabel>
               <Input onChange={handleTermPerProxyChange} />
             </FormControl>
           </ModalBody>
 
           <ModalFooter>
             <Button colorScheme='blue' mr={3} onClick={createProxies} isLoading={isLoading} loadingText='Creating'>
-              Create
+              Mint
             </Button>
             <Button onClick={onClose}>Cancel</Button>
           </ModalFooter>

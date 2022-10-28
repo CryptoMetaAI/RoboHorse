@@ -4,13 +4,14 @@ import { InjectedConnector } from '@web3-react/injected-connector';
 import { useWeb3React } from "@web3-react/core";
 import { XProxy } from 'components/templates/xenExtension/xProxy';
 import { XNFTs } from 'components/templates/xenExtension/xNFT';
+import { XEN } from 'components/templates/xenExtension/xen';
 import { chainId2NetworkName } from 'utils/config';
 
 const Home = () => {
   const { active, account, library, chainId, activate, deactivate } = useWeb3React()
   
   const injected = new InjectedConnector({
-    supportedChainIds: [1, 56, 97, 137, 80001],
+    supportedChainIds: [1, 56, 97, 137, 80001, 42170],
   })
 
   async function connect() {
@@ -51,11 +52,18 @@ const Home = () => {
       
       <Tabs width="150%">
         <TabList>
-          <Tab>xProxy</Tab>
-          <Tab>xNFT</Tab>
+          <Tab>XEN</Tab>
+          <Tab>Batch Mint</Tab>
+          <Tab>Dividendable NFT</Tab>
+          <Tab>Dividend Pool</Tab>
         </TabList>
 
         <TabPanels>
+          <TabPanel>
+            <Container maxW="100%" width="150%" p={3} marginTop={100} as="main" minH="70vh">
+              <XEN account={account || ''} web3={library} chainId={chainId || 0}/>
+            </Container>
+          </TabPanel>
           <TabPanel>
             <Container maxW="100%" width="150%" p={3} marginTop={100} as="main" minH="70vh">
               <XProxy account={account || ''} web3={library} chainId={chainId || 0}/>
@@ -66,6 +74,11 @@ const Home = () => {
               <XNFTs account={account || ''} web3={library} chainId={chainId || 0}/>
             </Container>
           </TabPanel>
+          {/* <TabPanel>
+            <Container maxW="100%" width="150%"  p={3} marginTop={100} as="main" minH="70vh">
+              
+            </Container>
+          </TabPanel> */}
         </TabPanels>
       </Tabs>
     </VStack>

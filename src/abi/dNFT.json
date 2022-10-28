@@ -151,6 +151,19 @@
 		],
 		"name": "batchCreateProxy",
 		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "burnedAmount",
+				"type": "uint256"
+			}
+		],
+		"name": "burnXen",
+		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
@@ -158,11 +171,11 @@
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "xProxyAddr",
+				"name": "proxyAddr",
 				"type": "address"
 			}
 		],
-		"name": "claimReward",
+		"name": "burnXenInXProxy",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -191,19 +204,6 @@
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "proxyAddr",
-				"type": "address"
-			}
-		],
-		"name": "mintXNFT",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"anonymous": false,
 		"inputs": [
 			{
@@ -215,7 +215,7 @@
 			{
 				"indexed": true,
 				"internalType": "address",
-				"name": "robotAddr",
+				"name": "xProxyAddr",
 				"type": "address"
 			},
 			{
@@ -225,8 +225,26 @@
 				"type": "uint256"
 			}
 		],
-		"name": "NewRobot",
+		"name": "NewXProxy",
 		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "onTokenBurned",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
 	},
 	{
 		"inputs": [
@@ -293,6 +311,32 @@
 			}
 		],
 		"name": "setApprovalForAll",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "contract IDPool",
+				"name": "_dPool",
+				"type": "address"
+			}
+		],
+		"name": "setDividendPool",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "contract ITraits",
+				"name": "_traits",
+				"type": "address"
+			}
+		],
+		"name": "setTraits",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -468,12 +512,17 @@
 	{
 		"inputs": [
 			{
+				"internalType": "address",
+				"name": "xProxyAddr",
+				"type": "address"
+			},
+			{
 				"internalType": "uint256",
-				"name": "tokenId",
+				"name": "amount",
 				"type": "uint256"
 			}
 		],
-		"name": "withdrawReward",
+		"name": "withdrawXEN",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -573,6 +622,19 @@
 		"type": "function"
 	},
 	{
+		"inputs": [],
+		"name": "dPool",
+		"outputs": [
+			{
+				"internalType": "contract IDPool",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "uint256",
@@ -599,31 +661,12 @@
 				"type": "address"
 			}
 		],
-		"name": "getProxys",
+		"name": "getProxies",
 		"outputs": [
 			{
 				"internalType": "address[]",
 				"name": "",
 				"type": "address[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "slotId",
-				"type": "uint256"
-			}
-		],
-		"name": "hasTimeLeft",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
 			}
 		],
 		"stateMutability": "view",
@@ -661,6 +704,19 @@
 				"internalType": "bool",
 				"name": "",
 				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "MintFee",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -744,6 +800,19 @@
 				"internalType": "string",
 				"name": "",
 				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "startTime",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -907,19 +976,6 @@
 	},
 	{
 		"inputs": [],
-		"name": "TotalShares",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
 		"name": "totalSupply",
 		"outputs": [
 			{
@@ -987,6 +1043,25 @@
 		"outputs": [
 			{
 				"internalType": "contract IXEN",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "xenTrait",
+		"outputs": [
+			{
+				"internalType": "address",
 				"name": "",
 				"type": "address"
 			}

@@ -32,17 +32,10 @@ type XNFTInfo = {
   xNFT: any;
   dPool: any;
   chainId: number;
-  tokenId: number;
-  owner: string;
-  attributes: any[];
-  description: string;
-  image: string;
-  name: string;
-  setMergeInfo: (type: MergeType, tokenId: number, share: number) => void;
-  refresh: (tokenId?: number) => void;
+  poolIndex: number;
 }
 
-const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, attributes, description, name, image, setMergeInfo, refresh }) => {
+const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, poolIndex }) => {
   const bgColor = useColorModeValue('none', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const descBgColor = useColorModeValue('gray.100', 'gray.600');
@@ -51,13 +44,7 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, att
   const modal2 = useDisclosure();
 
   const [share, setShare] = useState<number>(0);
-  const [proxyContract, setProxyContract] = useState<string>('');
-  const [reward, setReward] = useState<number>(0);
-  const [shareWithdrawed, setShareWithdrawed] = useState<string>('');
-  const [rewardClaimed, setRewardClaimed] = useState<string>('');
-  const [term, setTerm] = useState<number>(0);
   const [maturityTs, setMaturityTs] = useState<string>('');
-  const [rank, setRank] = useState<number>(0);
   const [isApproving, setIsApproving] = useState<boolean>(false);
   const [isDepositing, setIsDepositing] = useState<boolean>(false);
   const [isSpliting, setIsSpliting] = useState<boolean>(false);
@@ -72,46 +59,7 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, att
   let sharesInfo = '';
   let toAddr = '';
 
-  useEffect(() => {
-    attributes.forEach((attribute: any) => {
-      if (attribute.trait_type === 'xProxy') {
-        setProxyContract(attribute.value);
-      }
-      if (attribute.trait_type === 'share') {
-        setShare(attribute.value);
-      }
-      if (attribute.trait_type === 'shareWithdrawed') {
-        setShareWithdrawed(attribute.value);
-      }
-      if (attribute.trait_type === 'reward') {
-        setReward(attribute.value);
-      }
-      if (attribute.trait_type === 'rewardClaimed') {
-        setRewardClaimed(attribute.value);
-      }
-      if (attribute.trait_type === 'term') {
-        setTerm(attribute.value);
-      }
-      if (attribute.trait_type === 'maturityTs') {
-        setMaturityTs(attribute.value);
-      }
-      if (attribute.trait_type === 'rank') {
-        setRank(attribute.value);
-      }
-      setIsOutOfTime(parseInt(maturityTs) * 1000 < new Date().getTime());
-    })
-  });
-
-  useEffect(() => {
-    if (transferDirection ==='1') {
-      setMergeInfo(MergeType.FromAdd, tokenId, parseInt(shareOut));
-    } else if (transferDirection ==='2') {
-      setMergeInfo(MergeType.ToAdd, tokenId, 0);
-    } else if (transferDirection ==='3') {
-      setMergeInfo(MergeType.Clear, tokenId, 0);
-    }
-  }, [transferDirection, shareOut]);
-
+  
   const deposit = (tId: number) => {
     console.log(tId);
     const depositDNFT = () => {
@@ -133,7 +81,6 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, att
             .on('receipt', () => {
               modal1.onClose();
               setIsDepositing(false);
-              refresh(tId);
             })
             .on('error', () => {
               setIsDepositing(false);
@@ -190,89 +137,6 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, att
     })
   }
 
-  const splitXNFT = () => {
-    const shares = sharesInfo.split(',').map((shareStr: string) =>  {
-      try {
-        return parseInt(shareStr);
-      } catch (error) {
-        toast({
-          title: 'Warning',
-          description: "Please input right numbers",
-          status: 'warning',
-          position: 'bottom-right',
-          isClosable: true,
-        });
-      }
-      return 0;
-    });
-    console.log(shares);
-    const contractFunc = xNFT.methods['split']; 
-    const data = contractFunc(tokenId, shares).encodeABI();
-    const tx = {
-        from: account,
-        to: xNFT._address,
-        data,
-        value: 0,
-        gasLimit: 0
-    }
-    contractFunc(tokenId, shares).estimateGas({from: account}).then((gasLimit: any) => {
-      tx.gasLimit = gasLimit;
-      web3.eth.sendTransaction(tx)
-          .on('transactionHash', () => {
-            setIsSpliting(true);
-          })
-          .on('receipt', () => {
-            modal1.onClose();
-            setIsSpliting(false);
-            refresh();
-          })
-          .on('error', () => {
-            setIsSpliting(false);
-            toast({
-              title: 'Failed',
-              description: "Split xNFT failed",
-              status: 'error',
-              position: 'bottom-right',
-              isClosable: true,
-            });
-          });
-    });
-  }
-
-  const transferXNFT = () => {
-    console.log(account, toAddr, tokenId);
-    const contractFunc = xNFT.methods['transferFrom(address,address,uint256)']; 
-    const data = contractFunc(account, toAddr, tokenId).encodeABI();
-    const tx = {
-        from: account,
-        to: xNFT._address,
-        data,
-        value: 0,
-        gasLimit: 0
-    }
-    contractFunc(account, toAddr, tokenId).estimateGas({from: account}).then((gasLimit: any) => {
-      tx.gasLimit = gasLimit;
-      web3.eth.sendTransaction(tx)
-          .on('transactionHash', () => {
-            setIsTransferring(true);
-          })
-          .on('receipt', () => {
-            modal2.onClose();
-            setIsTransferring(false);
-            refresh(tokenId);
-          })
-          .on('error', () => {
-            setIsTransferring(false);
-            toast({
-              title: 'Failed',
-              description: "Transfer xNFT failed",
-              status: 'error',
-              position: 'bottom-right',
-              isClosable: true,
-            });
-          });
-    });
-  }
 
   const handleSharesChange = (e: any) => {
     sharesInfo = e.target.value;    
@@ -285,18 +149,8 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, att
   return (
     <>
     <Box bgColor={bgColor} padding={3} borderRadius="xl" borderWidth="1px" borderColor={borderColor}>
-      <HStack alignItems={'center'} justify={"center"}>
-        <Image
-          src={image}
-          alt={'nft'}          
-          boxSize="300px"
-          objectFit="fill"
-        />
-      </HStack>
+      
       <HStack alignItems={'center'} justify={"space-between"}>
-        <Box mt="1" fontWeight="semibold" as="h4" noOfLines={1} marginTop={2}>
-          {name}<Tooltip label={description}><QuestionOutlineIcon w={4} h={4} marginLeft='2px'/></Tooltip>
-        </Box>
         <HStack alignItems={'center'}>
           <Eth fontSize="20px" />
           <Box as="h4" noOfLines={1} fontWeight="medium" fontSize="smaller">

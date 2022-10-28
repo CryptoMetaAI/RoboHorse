@@ -1,6 +1,19 @@
 [
 	{
 		"inputs": [],
+		"name": "burn",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
 		"name": "claimMintReward",
 		"outputs": [],
 		"stateMutability": "nonpayable",
@@ -26,6 +39,24 @@
 		],
 		"name": "initialize",
 		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "onTokenBurned",
+		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
@@ -33,6 +64,43 @@
 		"inputs": [],
 		"stateMutability": "nonpayable",
 		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "xenContract",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "tokenContract",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "xenAmount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "tokenAmount",
+				"type": "uint256"
+			}
+		],
+		"name": "Redeemed",
+		"type": "event"
 	},
 	{
 		"inputs": [
@@ -43,16 +111,11 @@
 			},
 			{
 				"internalType": "uint256",
-				"name": "share",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "totalShare",
+				"name": "amount",
 				"type": "uint256"
 			}
 		],
-		"name": "withdrawReward",
+		"name": "withdraw",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -117,6 +180,19 @@
 	},
 	{
 		"inputs": [],
+		"name": "mintedAmount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
 		"name": "owner",
 		"outputs": [
 			{
@@ -129,13 +205,19 @@
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "totalReward",
+		"inputs": [
+			{
+				"internalType": "bytes4",
+				"name": "interfaceId",
+				"type": "bytes4"
+			}
+		],
+		"name": "supportsInterface",
 		"outputs": [
 			{
-				"internalType": "uint256",
+				"internalType": "bool",
 				"name": "",
-				"type": "uint256"
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",

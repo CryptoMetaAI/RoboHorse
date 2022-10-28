@@ -25,7 +25,7 @@ import { AiOutlineFilter } from "react-icons/ai";
 import { NFTCard } from 'components/modules';
 import React, { FC, useEffect, useState } from 'react';
 import XNFT from 'abi/dNFT.json';
-import DPool from 'abi/dPool.json';
+import DPoolABI from 'abi/dPool.json';
 import {xNFTAddr, MergeType, dPoolAddr} from 'utils/config';
 import * as utils from 'utils/utils';
 
@@ -35,17 +35,17 @@ type Web3Info = {
   chainId: number;
 }
 
-const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
+const DPool: FC<Web3Info> = ({ account, web3, chainId }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const modal1 = useDisclosure();
 
-  const [xNFTList, setXNFTList] = useState<any[]>([]);
+  const [dPoolList, setDPoolList] = useState<any[]>([]);
   const [xNFT, setXNFT] =useState<any>(null);
   const [dPool, setDPool] =useState<any>(null);
   const [robotAddress, setRobotAddress] = useState<string>('');
   const [tmpRobotAddress, setTmpRobotAddress] = useState<string>('');
   const [bMineNFT, setBMineNFT] = useState<boolean>(false);
-  const [totalSupply, setTotalSupply] = useState<number>(0);
+  const [dPoolNumber, setDPoolNumber] = useState<number>(0);
   const [tokensInSlot, setTokensInSlot] = useState<number[]>([]);
   const [myTokens, setMyTokens] = useState<number[]>([]);
   const [finalTokens, setFinalTokens] = useState<number[]>([]);
@@ -67,116 +67,16 @@ const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
   }, [web3])
 
   useEffect(() => {
-    if (xNFT != null) {      
-      getTotalSupply();
-      setRobotAddress('');
-      setBMineNFT(false);
+    if (dPool != null) {      
+      getTotalPoolNumber();
     }
-  }, [xNFT])
-
-  useEffect(() => {
-    console.log('update robotAddress')
-    if (utils.isEmptyObj(robotAddress)) {
-      setTokensInSlot([]);
-    } else {
-      const contractFunc = xNFT.methods['allTokensInSlot'];
-      contractFunc(robotAddress).call({from: account}).then((allTokensInSlot: number[]) => {
-        console.log(allTokensInSlot);
-        setTokensInSlot(allTokensInSlot);
-      });
-    }
-  }, [robotAddress])
-
-  useEffect(() => {
-    console.log('update bMineNFT')
-    if (!bMineNFT) {    
-      setMyTokens([]);
-    } else {
-      const tokenIds: number[] = [];
-      let contractFunc = xNFT.methods['balanceOf(address)'];
-      contractFunc(account).call({from: account}).then((myBalance: number) => {
-        contractFunc = xNFT.methods['tokenOfOwnerByIndex'];
-        for (let i = 0; i < myBalance; i++) {
-          contractFunc(account, i).call({from: account}).then((tokenId: number) => {
-            tokenIds.push(tokenId);
-            if (tokenIds.length === myBalance) {
-              setMyTokens(tokenIds);
-            }
-          })
-        }
-      })
-    }
-  }, [bMineNFT])
-
-  useEffect(() => {
-    const mergeToken = (startIndex: number, endIndex: number) => {
-      let intersectionTokens = [];
-      if (tokensInSlot.length === 0 && utils.isEmptyObj(robotAddress)) {
-        intersectionTokens = myTokens;
-      } else if (myTokens.length === 0 && !bMineNFT) {
-        intersectionTokens = tokensInSlot;
-      } else {
-        intersectionTokens = tokensInSlot.filter((value: number) => myTokens.includes(value)).sort((a: number, b: number) => b - a);
-      }
-      
-      const length: number = intersectionTokens.length;
-      if (length > startIndex && length < endIndex) {
-        endIndex = length;
-      }
-      setFinalTokens(intersectionTokens.slice(startIndex, endIndex));
-    }
-    console.log('update tokensInSlot & myTokens')
-    const startIndex = curPage * pageSize;
-    let endIndex: number = (curPage + 1) * pageSize;
-    if (tokensInSlot.length > 0 || myTokens.length > 0) {
-      mergeToken(startIndex, endIndex);
-    } else if (!utils.isEmptyObj(xNFT)) {
-      if (totalSupply > startIndex && totalSupply < endIndex) {
-        endIndex = totalSupply;
-      }
-      const tokenIds: number[] = [];
-      const contractFunc = xNFT.methods['tokenByIndex'];
-      for (let i = startIndex; i < endIndex; i++) {
-        const index = totalSupply - i - 1;
-        if (index < 0) {
-          break;
-        }
-        contractFunc(index).call({from: account}).then((tokenId: number) => {
-          tokenIds.push(tokenId);
-          if (tokenIds.length === endIndex - startIndex) {
-            setFinalTokens(tokenIds);
-          }
-        });
-      }
-    }
-  }, [tokensInSlot, myTokens, totalSupply, curPage])
-
-  useEffect(() => {
-    console.log(2, 'finalTokens', finalTokens);
-    const xNFTs: any[] = [];
-    finalTokens.forEach((tokenId: number) => {
-      let contractFunc = xNFT.methods['tokenURI'];
-      contractFunc(tokenId).call({from: account}).then((tokenURI: string) => {
-        const xNFTObj = JSON.parse(atob(tokenURI.substr('data:application/json;base64,'.length)));
-        contractFunc = xNFT.methods['ownerOf'];
-        contractFunc(tokenId).call({from: account}).then((owner: string) => {          
-          xNFTObj.tokenId = tokenId;
-          xNFTObj.owner = owner;
-          xNFTs.push(xNFTObj);
-          if (xNFTs.length === finalTokens.length) {
-            xNFTs.sort((a: any, b: any) => b.tokenId - a.tokenId)
-            setXNFTList(xNFTs);
-          }
-        });
-      });
-    });
-  }, [finalTokens])
+  }, [dPool])
 
 
-  const getTotalSupply = () => {
-    const contractFunc = xNFT.methods['totalSupply'];
+  const getTotalPoolNumber = () => {
+    const contractFunc = dPool.methods['poolLength'];
     contractFunc().call({from: account}).then((result: number) => {
-      setTotalSupply(parseInt(result.toString()));
+      setDPoolNumber(parseInt(result.toString()));
     });
   }
 
@@ -232,13 +132,13 @@ const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
         contractFunc(tokenId).call({from: account}).then((owner: string) => {          
           xNFTObj.tokenId = tokenId;
           xNFTObj.owner = owner;
-          const updatedXNFTs = xNFTList.map((nft: any) => {
+          const updatedXNFTs = dPoolList.map((nft: any) => {
             if (nft.tokenId === tokenId) {
               return xNFTObj;
             }
             return nft;
           });
-          setXNFTList(updatedXNFTs);
+          setDPoolList(updatedXNFTs);
         });
       });
     }
@@ -306,11 +206,7 @@ const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
       <Heading size="lg" marginBottom={6}>
         <HStack justifyContent='space-between'>
           <HStack spacing='18px'>
-            <div>DNFT List</div>
-            <Checkbox colorScheme='teal' onChange={(e) => setBMineNFT(e.target.checked)}>Only Mine</Checkbox>
-            <Tooltip label={`Filter xProxy Address: ${robotAddress}`}>
-              <Button colorScheme='teal' variant='ghost' onClick={modal1.onOpen}><Icon as={AiOutlineFilter} w={6} h={6}/></Button>   
-            </Tooltip>         
+            <div>Dividend Pool List</div>       
           </HStack>
           <HStack spacing='18px'>
             <Tooltip label={'Last Page'}>
@@ -324,18 +220,14 @@ const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
             </NumberInputStepper>
             </NumberInput>
             <Tooltip label={'Next Page'}>
-              <Button colorScheme='teal' variant='outline' onClick={() => setCurPage((curPage + 1) * pageSize >= totalSupply ? curPage : curPage + 1)}><ArrowRightIcon /></Button>
+              <Button colorScheme='teal' variant='outline' onClick={() => setCurPage((curPage + 1) * pageSize >= dPoolNumber ? curPage : curPage + 1)}><ArrowRightIcon /></Button>
             </Tooltip>
-          </HStack>
-          <HStack spacing='18px'>
-            <Button colorScheme='teal' variant='outline' onClick={() => refresh(0)}>Refresh</Button>
-            <Button colorScheme='teal' variant='outline' onClick={openMergeModal}>Merge</Button>
           </HStack>
         </HStack>
       </Heading>
-      {xNFTList?.length ? (
+      {dPoolList?.length ? (
         <SimpleGrid  columns={3} spacing={10}>
-          {xNFTList.map((xNFTObj, key) => (
+          {dPoolList.map((xNFTObj, key) => (
             <NFTCard {...xNFTObj} key={key} account={account} web3={web3} xNFT={xNFT} dPool={dPool} setMergeInfo={setMergeInfo} refresh={refresh}/>
           ))}
         </SimpleGrid>
@@ -405,4 +297,4 @@ const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
   );
 };
 
-export default XNFTs;
+export default DPool;
