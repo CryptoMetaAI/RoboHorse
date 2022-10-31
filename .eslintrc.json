@@ -5,6 +5,7 @@
     "prefer-destructuring": ["error", {"object": false, "array": false}],
     "@typescript-eslint/no-inferrable-types": "off",
     "@typescript-eslint/no-explicit-any": ["off"],
-    "complexity": ["error", 20]
+    "complexity": ["error", 20],
+    "eqeqeq": ["off"]
   }
 }

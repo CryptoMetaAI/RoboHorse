@@ -28,6 +28,7 @@ import XNFT from 'abi/dNFT.json';
 import DPool from 'abi/dPool.json';
 import {xNFTAddr, MergeType, dPoolAddr} from 'utils/config';
 import * as utils from 'utils/utils';
+import BigNumber from 'bignumber.js';
 
 type Web3Info = {
   account: string;
@@ -42,8 +43,8 @@ const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
   const [xNFTList, setXNFTList] = useState<any[]>([]);
   const [xNFT, setXNFT] =useState<any>(null);
   const [dPool, setDPool] =useState<any>(null);
-  const [robotAddress, setRobotAddress] = useState<string>('');
-  const [tmpRobotAddress, setTmpRobotAddress] = useState<string>('');
+  const [peroid, setPeroid] = useState<string>('');
+  const [tmpPeroid, setTmpPeroid] = useState<string>('');
   const [bMineNFT, setBMineNFT] = useState<boolean>(false);
   const [totalSupply, setTotalSupply] = useState<number>(0);
   const [tokensInSlot, setTokensInSlot] = useState<number[]>([]);
@@ -69,23 +70,23 @@ const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
   useEffect(() => {
     if (xNFT != null) {      
       getTotalSupply();
-      setRobotAddress('');
+      setPeroid('');
       setBMineNFT(false);
     }
   }, [xNFT])
 
   useEffect(() => {
-    console.log('update robotAddress')
-    if (utils.isEmptyObj(robotAddress)) {
+    console.log('update peroid')
+    if (utils.isEmptyObj(peroid)) {
       setTokensInSlot([]);
     } else {
       const contractFunc = xNFT.methods['allTokensInSlot'];
-      contractFunc(robotAddress).call({from: account}).then((allTokensInSlot: number[]) => {
+      contractFunc(peroid).call({from: account}).then((allTokensInSlot: number[]) => {
         console.log(allTokensInSlot);
         setTokensInSlot(allTokensInSlot);
       });
     }
-  }, [robotAddress])
+  }, [peroid])
 
   useEffect(() => {
     console.log('update bMineNFT')
@@ -111,7 +112,7 @@ const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
   useEffect(() => {
     const mergeToken = (startIndex: number, endIndex: number) => {
       let intersectionTokens = [];
-      if (tokensInSlot.length === 0 && utils.isEmptyObj(robotAddress)) {
+      if (tokensInSlot.length === 0 && utils.isEmptyObj(peroid)) {
         intersectionTokens = myTokens;
       } else if (myTokens.length === 0 && !bMineNFT) {
         intersectionTokens = tokensInSlot;
@@ -182,11 +183,11 @@ const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
 
   const mergeXNFTValue = () => {
     const tokenIds: number[] = [];
-    const shares: number[] = [];
+    const shares: string[] = [];
     console.log(toTokenId);
     Object.entries(transferValueFromInfo).forEach((entry: any) => {
       tokenIds.push(entry[0]);
-      shares.push(entry[1]);
+      shares.push(`0x${new BigNumber(entry[1]).shiftedBy(18).toString(16)}`);
     })
     const contractFunc = xNFT.methods['merge']; 
     const data = contractFunc(tokenIds, shares, parseInt(toTokenId)).encodeABI();
@@ -308,7 +309,7 @@ const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
           <HStack spacing='18px'>
             <div>DNFT List</div>
             <Checkbox colorScheme='teal' onChange={(e) => setBMineNFT(e.target.checked)}>Only Mine</Checkbox>
-            <Tooltip label={`Filter xProxy Address: ${robotAddress}`}>
+            <Tooltip label={`Filter DNFT by Peroid`}>
               <Button colorScheme='teal' variant='ghost' onClick={modal1.onOpen}><Icon as={AiOutlineFilter} w={6} h={6}/></Button>   
             </Tooltip>         
           </HStack>
@@ -348,7 +349,7 @@ const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Merge xNFT Value</ModalHeader>
+          <ModalHeader>Merge Value of XEN in DNFT</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             <FormControl>
@@ -356,7 +357,7 @@ const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
               <Input disabled value={outShareInfo}/>
             </FormControl>
             <FormControl>
-              <FormLabel>To xNFT's TokenID</FormLabel>
+              <FormLabel>To DNFT's TokenID</FormLabel>
               <Select onChange={(e) => setToTokenId(e.target.value)} value={toTokenId}>
                 {
                   Object.entries(transferValueToTokenId).map((entry: any) =>
@@ -381,20 +382,20 @@ const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Filter xProxy</ModalHeader>
+          <ModalHeader>Filter Peroid</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             <FormControl>
-              <FormLabel>Address of xProxy</FormLabel>
-              <Input value={tmpRobotAddress} onChange={(e) => setTmpRobotAddress(e.target.value)}/>
+              <FormLabel>Peroid Number</FormLabel>
+              <Input value={tmpPeroid} onChange={(e) => setTmpPeroid(e.target.value)}/>
             </FormControl>
           </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme='red' mr={3} onClick={() => {setRobotAddress(''); setTmpRobotAddress(''); modal1.onClose(); }}>
-              Clear
+            <Button colorScheme='red' mr={3} onClick={() => {setPeroid(''); setTmpPeroid(''); modal1.onClose(); }}>
+              Show All
             </Button>
-            <Button colorScheme='blue' mr={3} onClick={() => {setRobotAddress(tmpRobotAddress); modal1.onClose(); }}>
+            <Button colorScheme='blue' mr={3} onClick={() => {setPeroid(tmpPeroid); modal1.onClose(); }}>
               Confirm
             </Button>
             <Button onClick={modal1.onClose}>Cancel</Button>

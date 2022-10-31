@@ -24,6 +24,7 @@ import { QuestionOutlineIcon } from '@chakra-ui/icons'
 import { Eth } from '@web3uikit/icons';
 import React, { FC, useEffect, useState} from 'react';
 import { MergeType } from 'utils/config';
+import BigNumber from 'bignumber.js';
 
 
 type XNFTInfo = {
@@ -38,11 +39,11 @@ type XNFTInfo = {
   description: string;
   image: string;
   name: string;
-  setMergeInfo: (type: MergeType, tokenId: number, share: number) => void;
+  setMergeInfo: (type: MergeType, tokenId: number, burnedXEN: number) => void;
   refresh: (tokenId?: number) => void;
 }
 
-const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, attributes, description, name, image, setMergeInfo, refresh }) => {
+const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, description, name, image, attributes, setMergeInfo, refresh }) => {
   const bgColor = useColorModeValue('none', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const descBgColor = useColorModeValue('gray.100', 'gray.600');
@@ -50,19 +51,11 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, att
   const modal1 = useDisclosure();
   const modal2 = useDisclosure();
 
-  const [share, setShare] = useState<number>(0);
-  const [proxyContract, setProxyContract] = useState<string>('');
-  const [reward, setReward] = useState<number>(0);
-  const [shareWithdrawed, setShareWithdrawed] = useState<string>('');
-  const [rewardClaimed, setRewardClaimed] = useState<string>('');
-  const [term, setTerm] = useState<number>(0);
-  const [maturityTs, setMaturityTs] = useState<string>('');
-  const [rank, setRank] = useState<number>(0);
+  const [burnedXEN, setBurnedXEN] = useState<number>(0);
   const [isApproving, setIsApproving] = useState<boolean>(false);
   const [isDepositing, setIsDepositing] = useState<boolean>(false);
   const [isSpliting, setIsSpliting] = useState<boolean>(false);
   const [isTransferring, setIsTransferring] = useState<boolean>(false);
-  const [isOutOfTime, setIsOutOfTime] = useState<boolean>(false);
   const [transferDirection, setTransferDirection] = useState<string>('0');
   const [shareOut, setShareOut] = useState<string>('1');
   const [mergeDisplay, setMergeDisplay] = useState<string>('none');
@@ -74,31 +67,9 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, att
 
   useEffect(() => {
     attributes.forEach((attribute: any) => {
-      if (attribute.trait_type === 'xProxy') {
-        setProxyContract(attribute.value);
+      if (attribute.trait_type === 'Burned XEN') {
+        setBurnedXEN(parseInt(attribute.value));
       }
-      if (attribute.trait_type === 'share') {
-        setShare(attribute.value);
-      }
-      if (attribute.trait_type === 'shareWithdrawed') {
-        setShareWithdrawed(attribute.value);
-      }
-      if (attribute.trait_type === 'reward') {
-        setReward(attribute.value);
-      }
-      if (attribute.trait_type === 'rewardClaimed') {
-        setRewardClaimed(attribute.value);
-      }
-      if (attribute.trait_type === 'term') {
-        setTerm(attribute.value);
-      }
-      if (attribute.trait_type === 'maturityTs') {
-        setMaturityTs(attribute.value);
-      }
-      if (attribute.trait_type === 'rank') {
-        setRank(attribute.value);
-      }
-      setIsOutOfTime(parseInt(maturityTs) * 1000 < new Date().getTime());
     })
   });
 
@@ -180,7 +151,7 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, att
             });
       });
     }
-    let contractFunc = xNFT.methods['isApprovedForAll'];
+    const contractFunc = xNFT.methods['isApprovedForAll'];
     contractFunc(account, dPool._address).call({from: account}).then((isApproved: boolean) => {
       if (isApproved) {
         depositDNFT();
@@ -205,9 +176,9 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, att
       }
       return 0;
     });
-    console.log(shares);
+    const normalShares = shares.map((share: number) => `0x${new BigNumber(share).shiftedBy(18).toString(16)}`);
     const contractFunc = xNFT.methods['split']; 
-    const data = contractFunc(tokenId, shares).encodeABI();
+    const data = contractFunc(tokenId, normalShares).encodeABI();
     const tx = {
         from: account,
         to: xNFT._address,
@@ -215,7 +186,7 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, att
         value: 0,
         gasLimit: 0
     }
-    contractFunc(tokenId, shares).estimateGas({from: account}).then((gasLimit: any) => {
+    contractFunc(tokenId, normalShares).estimateGas({from: account}).then((gasLimit: any) => {
       tx.gasLimit = gasLimit;
       web3.eth.sendTransaction(tx)
           .on('transactionHash', () => {
@@ -230,7 +201,7 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, att
             setIsSpliting(false);
             toast({
               title: 'Failed',
-              description: "Split xNFT failed",
+              description: "Split DNFT failed",
               status: 'error',
               position: 'bottom-right',
               isClosable: true,
@@ -265,7 +236,7 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, att
             setIsTransferring(false);
             toast({
               title: 'Failed',
-              description: "Transfer xNFT failed",
+              description: "Transfer DNFT failed",
               status: 'error',
               position: 'bottom-right',
               isClosable: true,
@@ -288,7 +259,7 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, att
       <HStack alignItems={'center'} justify={"center"}>
         <Image
           src={image}
-          alt={'nft'}          
+          alt={'DNFT'}          
           boxSize="300px"
           objectFit="fill"
         />
@@ -322,24 +293,24 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, att
             <Button colorScheme='teal' variant='outline' disabled={account !== owner} 
                     onClick={() => deposit(tokenId)} isLoading={isApproving || isDepositing} loadingText={isApproving ? 'Approving' : 'Depositing'}>Deposit</Button>
           </HStack>
-          <Checkbox marginTop='2' isDisabled={isOutOfTime} colorScheme='teal' onChange={(e) => setMergeDisplay(e.target.checked ? 'block' : 'none')}>Open Merge</Checkbox>
+          <Checkbox marginTop='2' colorScheme='teal' onChange={(e) => setMergeDisplay(e.target.checked ? 'block' : 'none')}>Merge Value of Burned XEN in DNFT</Checkbox>
         </Box>
       </SimpleGrid>
       <SimpleGrid columns={1} spacing={4} bgColor={descBgColor} padding={2.5} borderRadius="xl" marginTop={2} display={mergeDisplay}>
         <Box>
           <RadioGroup onChange={setTransferDirection} value={transferDirection}>
             <HStack alignItems={'center'} justify='space-around'>
-              <Radio value='1' isDisabled={account !== owner || isOutOfTime} colorScheme='teal'>Transfer out of share</Radio>
-              <Radio value='2' isDisabled={isOutOfTime} colorScheme='teal'>Transfer to share</Radio>
-              <Radio value='3' isDisabled={isOutOfTime} colorScheme='teal'>Not Transfer</Radio>
+              <Radio value='1' isDisabled={account !== owner} colorScheme='teal'>Transfer out</Radio>
+              <Radio value='2' colorScheme='teal'>Transfer in</Radio>
+              <Radio value='3' colorScheme='teal'>Not Transfer</Radio>
             </HStack>
           </RadioGroup>
         </Box>
-        <Box>
+        <Box display={transferDirection === '1' ? 'block' : 'none'} marginTop={'10px'}>
           <HStack alignItems={'center'} justify='flex-start'>
-            <strong>Out Share:</strong>
-            <NumberInput min={1} max={share} isDisabled={account !== owner || isOutOfTime || transferDirection !== '1'} onChange={setShareOut} value={shareOut}>
-              <NumberInputField placeholder='share of transfer out'/>
+            <strong>Value:</strong>
+            <NumberInput min={1} max={burnedXEN} isDisabled={account !== owner || transferDirection !== '1'} onChange={setShareOut} value={shareOut}>
+              <NumberInputField placeholder='value to transfer out'/>
               <NumberInputStepper>
                 <NumberIncrementStepper />
                 <NumberDecrementStepper />
@@ -356,12 +327,12 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, att
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Split xNFT [total share={share}]</ModalHeader>
+          <ModalHeader>Split DNFT [total burned XEN = {burnedXEN}]</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             <FormControl>
-              <FormLabel>Shares</FormLabel>
-              <Input ref={initialRef} onChange={handleSharesChange} placeholder='eg: 100,500,1000'/>
+              <FormLabel>XENs</FormLabel>
+              <Input ref={initialRef} onChange={handleSharesChange} placeholder='eg: 100,500,1000 (unit is XEN)'/>
             </FormControl>
           </ModalBody>
 

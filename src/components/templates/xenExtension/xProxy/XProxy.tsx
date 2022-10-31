@@ -464,7 +464,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
                             </Tooltip>
                         }
                         {
-                          proxy.xNFTIds.length > 0 || parseInt(proxy.maturityTs) * 1000 < new Date().getTime() ? 
+                          proxy.xNFTIds.length > 0 || proxy.balance === 0 ? 
                             null :
                             <Button colorScheme='teal' variant='outline' isLoading={isMinting[proxy.address]} loadingText='Minting' onClick={() => burnMintDNFT(proxy)}>Burn & Mint DNFT</Button>
                         }

@@ -9,7 +9,7 @@ const XNFTLogo = () => {
       src={colorMode === 'dark' ? '/logo.png' : '/logo.png'}
       height={45}
       width={45}
-      alt="XNFT"
+      alt="DXEN"
     />
   );
 };

@@ -1,30 +1,16 @@
 import { 
-  Box, HStack, Image, SimpleGrid, useColorModeValue, Tooltip, Button,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper, 
-  useDisclosure,
+  Box, HStack, Text, SimpleGrid, useColorModeValue, Tooltip, Button,
   useToast,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  FormControl,
-  FormLabel,
-  Input,
-  Radio, RadioGroup,
-  Checkbox
+  VStack,
 } from '@chakra-ui/react';
 import { QuestionOutlineIcon } from '@chakra-ui/icons'
+import BigNumber from 'bignumber.js';
+import { Icon } from '@chakra-ui/react';
+import { SiExpertsexchange } from 'react-icons/si';
+import { GoArrowRight } from 'react-icons/go';
 import { Eth } from '@web3uikit/icons';
 import React, { FC, useEffect, useState} from 'react';
-import { MergeType } from 'utils/config';
-
+import moment from 'moment';
 
 type XNFTInfo = {
   account: string;
@@ -32,39 +18,94 @@ type XNFTInfo = {
   xNFT: any;
   dPool: any;
   chainId: number;
-  poolIndex: number;
+  poolInfo: any;
 }
 
-const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, poolIndex }) => {
+const NFTCard: FC<XNFTInfo> = ({ account, web3, dPool, poolInfo }) => {
   const bgColor = useColorModeValue('none', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const descBgColor = useColorModeValue('gray.100', 'gray.600');
-
-  const modal1 = useDisclosure();
-  const modal2 = useDisclosure();
-
-  const [share, setShare] = useState<number>(0);
-  const [maturityTs, setMaturityTs] = useState<string>('');
-  const [isApproving, setIsApproving] = useState<boolean>(false);
-  const [isDepositing, setIsDepositing] = useState<boolean>(false);
-  const [isSpliting, setIsSpliting] = useState<boolean>(false);
-  const [isTransferring, setIsTransferring] = useState<boolean>(false);
-  const [isOutOfTime, setIsOutOfTime] = useState<boolean>(false);
-  const [transferDirection, setTransferDirection] = useState<string>('0');
-  const [shareOut, setShareOut] = useState<string>('1');
-  const [mergeDisplay, setMergeDisplay] = useState<string>('none');
+  const [isRedeeming, setIsRedeeming] = useState<boolean>(false);
+  const [isClaiming, setIsClaiming] = useState<boolean>(false);
+  const [pendingDividend, setPendingDividend] = useState<number>(0);
+  const [curPoolInfo, setCurPoolInfo] = useState<any>(poolInfo);
+  const [userInfo, setUserInfo] = useState<any>({});
 
   const toast = useToast();
-  const initialRef = React.useRef(null);
-  let sharesInfo = '';
-  let toAddr = '';
 
+  useEffect(() => {
+    if (dPool != null) {     
+      refresh(); 
+    }
+  }, [])
   
-  const deposit = (tId: number) => {
-    console.log(tId);
-    const depositDNFT = () => {
-      const contractFunc = dPool.methods['deposit']; 
-      const data = contractFunc([tId]).encodeABI();
+  const getPendingDividend = () => {
+    const contractFunc = dPool.methods['pendingDividend'];
+    contractFunc(poolInfo.index, account).call({from: account}).then((amount: number) => {
+      setPendingDividend(amount);
+    })
+  }
+  
+  const getUserInfo = () => {
+    const contractFunc = dPool.methods['userInfo'];
+    contractFunc(poolInfo.index, account).call({from: account}).then((user: number) => {
+      setUserInfo(user);
+    })
+  }
+
+  const updatePoolInfo = () => {
+    const contractFunc = dPool.methods['poolList'];
+    contractFunc(poolInfo.index).call({from: account}).then((poolInfoObj: any) => {
+      setCurPoolInfo(poolInfoObj);
+      console.log(poolInfoObj);
+    });
+  }
+
+  const refresh = () => {
+    if (dPool != null) {     
+      getPendingDividend(); 
+      getUserInfo();
+      updatePoolInfo(); 
+    }
+  }
+
+  const claimDividend = () => {
+    const contractFunc = dPool.methods['claimDividend']; 
+    const data = contractFunc(poolInfo.index).encodeABI();
+    const tx = {
+        from: account,
+        to: dPool._address,
+        data,
+        value: 0,
+        gasLimit: 0
+    }
+    contractFunc(poolInfo.index).estimateGas({from: account}).then((gasLimit: any) => {
+      tx.gasLimit = gasLimit;
+      web3.eth.sendTransaction(tx)
+          .on('transactionHash', () => {
+            setIsClaiming(true);
+          })
+          .on('receipt', () => {
+            setIsClaiming(false);
+            refresh();
+          })
+          .on('error', () => {
+            setIsClaiming(false);
+            toast({
+              title: 'Failed',
+              description: "Claim dividend failed",
+              status: 'error',
+              position: 'bottom-right',
+              isClosable: true,
+            });
+          });
+    });
+  }
+
+
+    const redeemDNFT = () => {
+      const contractFunc = dPool.methods['redeemAll']; 
+      const data = contractFunc(poolInfo.index).encodeABI();
       const tx = {
           from: account,
           to: dPool._address,
@@ -72,21 +113,21 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, poolIndex }) => {
           value: 0,
           gasLimit: 0
       }
-      contractFunc([tId]).estimateGas({from: account}).then((gasLimit: any) => {
+      contractFunc(poolInfo.index).estimateGas({from: account}).then((gasLimit: any) => {
         tx.gasLimit = gasLimit;
         web3.eth.sendTransaction(tx)
             .on('transactionHash', () => {
-              setIsDepositing(true);
+              setIsRedeeming(true);
             })
             .on('receipt', () => {
-              modal1.onClose();
-              setIsDepositing(false);
+              setIsRedeeming(false);
+              refresh();
             })
             .on('error', () => {
-              setIsDepositing(false);
+              setIsRedeeming(false);
               toast({
                 title: 'Failed',
-                description: "Deposit DNFT failed",
+                description: "Redeem DNFT failed",
                 status: 'error',
                 position: 'bottom-right',
                 isClosable: true,
@@ -94,163 +135,95 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, poolIndex }) => {
             });
       });
     }
-
-    const approveForAll = () => {
-      const contractFunc = xNFT.methods['setApprovalForAll'];
-      const data = contractFunc(dPool._address, true).encodeABI();
-      const tx = {
-          from: account,
-          to: xNFT._address,
-          data,
-          value: 0,
-          gasLimit: 0
-      }
-      contractFunc(dPool._address, true).estimateGas({from: account}).then((gasLimit: any) => {
-        tx.gasLimit = gasLimit;
-        web3.eth.sendTransaction(tx)
-            .on('transactionHash', () => {
-              setIsApproving(true);
-            })
-            .on('receipt', () => {
-              setIsApproving(false);
-              depositDNFT();
-            })
-            .on('error', () => {
-              setIsApproving(false);
-              toast({
-                title: 'Failed',
-                description: "Approve DNFT failed",
-                status: 'error',
-                position: 'bottom-right',
-                isClosable: true,
-              });
-            });
-      });
-    }
-    let contractFunc = xNFT.methods['isApprovedForAll'];
-    contractFunc(account, dPool._address).call({from: account}).then((isApproved: boolean) => {
-      if (isApproved) {
-        depositDNFT();
-      } else {
-        approveForAll();
-      }
-    })
-  }
-
-
-  const handleSharesChange = (e: any) => {
-    sharesInfo = e.target.value;    
-  }
-
-  const handleToAddrChange = (e: any) => {
-    toAddr = e.target.value;    
-  }
 
   return (
     <>
     <Box bgColor={bgColor} padding={3} borderRadius="xl" borderWidth="1px" borderColor={borderColor}>
-      
-      <HStack alignItems={'center'} justify={"space-between"}>
-        <HStack alignItems={'center'}>
-          <Eth fontSize="20px" />
-          <Box as="h4" noOfLines={1} fontWeight="medium" fontSize="smaller">
-            ERC3525
-          </Box>
+      <SimpleGrid columns={1} spacing={4} bgColor={descBgColor} padding={2.5} borderRadius="xl" marginTop={2}>
+        <HStack alignItems={'center'} justify={"space-between"}>
+          <HStack alignItems={'center'} justify={"space-between"}>
+            <VStack>
+              <Text fontSize='md' color='white'>Earn ETH</Text>
+              <Text fontSize='sm' color='gray'>Burn XEN</Text>
+            </VStack>
+            <VStack>
+              <Text fontSize='md' as='b' color='white'>{new BigNumber(poolInfo.accDividendPerShare).shiftedBy(-8).toFixed(2).toString()}</Text>
+              <Text fontSize='sm' color='gray'>10000</Text>
+            </VStack>
+          </HStack>
+          <VStack>
+            <Text fontSize='md' as='b' color='white'>{poolInfo.index}</Text>
+            <Text fontSize='sm' color='gray'>Peroid</Text>
+          </VStack>
+          <HStack alignItems={'center'} justify={"space-between"}>
+            <Icon as={SiExpertsexchange} fontSize="30px" color='gray.400'/>
+            <Icon as={GoArrowRight} fontSize="20px" color='gray.400'/>
+            <Eth fontSize="40px"/>
+          </HStack>
         </HStack>
-      </HStack>
-      <Box width='100%'>
-        <HStack alignItems={'center'}>
-          <Box as="h4" noOfLines={1} fontWeight="medium" fontSize="sm">
-          <strong>owner:</strong>
+      </SimpleGrid>
+      <SimpleGrid columns={1} spacing={4} spacingX={0} bgColor={descBgColor} padding={2.5} borderRadius="xl" marginTop={2}>
+         <Box width='100%'>
+            <HStack alignItems={'center'}>
+              <Box as="h4" noOfLines={1} fontWeight="medium" fontSize="sm">
+              <Tooltip label={'Has Minted Out / Total Dividend'}><QuestionOutlineIcon w={3} h={3} marginRight='2px'/></Tooltip><strong>Dividend:</strong>
+              </Box>
+              <Box as="h4" noOfLines={1} fontSize="small">
+                {new BigNumber(curPoolInfo.mintedOutDividend).shiftedBy(-18).toFixed(3)} / {new BigNumber(curPoolInfo.totalDividend).shiftedBy(-18).toFixed(3)} ETH
+              </Box>
+            </HStack>
           </Box>
-          <Box as="h4" noOfLines={1} fontSize="sm">
-            {owner}
+          <Box width='100%'>
+            <HStack alignItems={'center'}>
+              <Box as="h4" noOfLines={1} fontWeight="medium" fontSize="sm">
+              <Tooltip label={'Your Burned / Total Burned'}><QuestionOutlineIcon w={3} h={3} marginRight='2px'/></Tooltip><strong>Burned:</strong>
+              </Box>
+              <Box as="h4" noOfLines={1} fontSize="small">
+              {new BigNumber(userInfo.weight).shiftedBy(-18).toFixed(2)} / {new BigNumber(curPoolInfo.totalWeightOfNFT).shiftedBy(-18).toFixed(2)} XEN
+              </Box>
+            </HStack>
           </Box>
-        </HStack>
-      </Box>
+          <Box width='100%'>
+            <HStack alignItems={'center'}>
+              <Box as="h4" noOfLines={1} fontWeight="medium" fontSize="sm">
+              <strong>Pending Dividend:</strong>
+              </Box>
+              <Box as="h4" noOfLines={1} fontSize="small">
+              {new BigNumber(pendingDividend).shiftedBy(-18).toFixed(3)} ETH
+              </Box>
+            </HStack>
+          </Box>
+          <Box width='100%'>
+            <HStack alignItems={'center'}>
+              <Box as="h4" noOfLines={1} fontWeight="medium" fontSize="sm">
+              <Text fontSize='sm' as='b' color='white'>Dividend <Text fontSize='xs' as='b' color='gray'>/ Second</Text>:</Text>
+              </Box>
+              <Box as="h4" noOfLines={1} fontSize="small">
+              {new BigNumber(curPoolInfo.dividendPerSecond).shiftedBy(-18).toFixed(6)} ETH
+              </Box>
+            </HStack>
+          </Box>
+          <Box width='100%'>
+            <HStack alignItems={'center'}>
+              <Box as="h4" noOfLines={1} fontWeight="medium" fontSize="sm">
+              <Text fontSize='sm' as='b' color='white'>End Time:</Text>
+              </Box>
+              <Box as="h4" noOfLines={1} fontSize="small">
+              {parseInt(curPoolInfo.endTime) === 0 ? 'Not Started' : moment(new Date(parseInt(curPoolInfo.endTime) * 1000)).format('YYYY/MM/DD HH:mm:ss')}
+              </Box>
+            </HStack>
+          </Box>
+      </SimpleGrid>
       <SimpleGrid columns={1} spacing={4} bgColor={descBgColor} padding={2.5} borderRadius="xl" marginTop={2}>
         <Box>
           <HStack alignItems={'center'} justify='space-between'>
-            <Button colorScheme='teal' variant='outline' disabled={account !== owner} onClick={modal1.onOpen}>Split</Button>
-            <Button colorScheme='teal' variant='outline' disabled={account !== owner} onClick={modal2.onOpen}>Transfer</Button>
-            <Button colorScheme='teal' variant='outline' disabled={account !== owner} 
-                    onClick={() => deposit(tokenId)} isLoading={isApproving || isDepositing} loadingText={isApproving ? 'Approving' : 'Depositing'}>Deposit</Button>
-          </HStack>
-          <Checkbox marginTop='2' isDisabled={isOutOfTime} colorScheme='teal' onChange={(e) => setMergeDisplay(e.target.checked ? 'block' : 'none')}>Open Merge</Checkbox>
-        </Box>
-      </SimpleGrid>
-      <SimpleGrid columns={1} spacing={4} bgColor={descBgColor} padding={2.5} borderRadius="xl" marginTop={2} display={mergeDisplay}>
-        <Box>
-          <RadioGroup onChange={setTransferDirection} value={transferDirection}>
-            <HStack alignItems={'center'} justify='space-around'>
-              <Radio value='1' isDisabled={account !== owner || isOutOfTime} colorScheme='teal'>Transfer out of share</Radio>
-              <Radio value='2' isDisabled={isOutOfTime} colorScheme='teal'>Transfer to share</Radio>
-              <Radio value='3' isDisabled={isOutOfTime} colorScheme='teal'>Not Transfer</Radio>
-            </HStack>
-          </RadioGroup>
-        </Box>
-        <Box>
-          <HStack alignItems={'center'} justify='flex-start'>
-            <strong>Out Share:</strong>
-            <NumberInput min={1} max={share} isDisabled={account !== owner || isOutOfTime || transferDirection !== '1'} onChange={setShareOut} value={shareOut}>
-              <NumberInputField placeholder='share of transfer out'/>
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
+            <Button colorScheme='teal' variant='outline' onClick={claimDividend} isLoading={isClaiming} loadingText={'Claiming'}>Claim Dividend</Button>
+            <Button colorScheme='teal' variant='outline' onClick={redeemDNFT} isLoading={isRedeeming} loadingText={'Redeeming'}>Redeem DNFT</Button>
+            <Button colorScheme='teal' variant='outline' onClick={refresh}>Refresh</Button>
           </HStack>
         </Box>
       </SimpleGrid>
     </Box>
-    <Modal
-        initialFocusRef={initialRef}
-        isOpen={modal1.isOpen}
-        onClose={modal1.onClose}
-      >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Split xNFT [total share={share}]</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            <FormControl>
-              <FormLabel>Shares</FormLabel>
-              <Input ref={initialRef} onChange={handleSharesChange} placeholder='eg: 100,500,1000'/>
-            </FormControl>
-          </ModalBody>
-
-          <ModalFooter>
-            <Button colorScheme='blue' mr={3} onClick={() => splitXNFT()} isLoading={isSpliting} loadingText='Spliting'>
-              Split
-            </Button>
-            <Button onClick={modal1.onClose}>Cancel</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      <Modal
-          isOpen={modal2.isOpen}
-          onClose={modal2.onClose}
-        >
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Transfer xNFT</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody pb={6}>
-              <FormControl>
-                <FormLabel>To Address</FormLabel>
-                <Input onChange={handleToAddrChange}/>
-              </FormControl>
-            </ModalBody>
-
-            <ModalFooter>
-              <Button colorScheme='blue' mr={3} onClick={() => transferXNFT()} isLoading={isTransferring} loadingText='Transferring'>
-                Transfer
-              </Button>
-              <Button onClick={modal2.onClose}>Cancel</Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
     </>
   );
 };

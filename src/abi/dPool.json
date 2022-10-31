@@ -376,19 +376,6 @@
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "poolLength",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
 		"inputs": [
 			{
 				"internalType": "uint256",
@@ -431,6 +418,11 @@
 			{
 				"internalType": "uint256",
 				"name": "totalWeightOfNFT",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "toMintDividend",
 				"type": "uint256"
 			}
 		],

@@ -83,65 +83,62 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
 
   const getGlobalRank = () => {
     const contractFunc = xen.methods['globalRank'];        
-      contractFunc().call({from: account}).then((result: any) => {
-        setGlobalRank(result);
-      });
+    contractFunc().call({from: account}).then((result: any) => {
+      setGlobalRank(result);
+    });
   }
 
   const getTotalSupply = () => {
     const contractFunc = xen.methods['totalSupply'];        
-      contractFunc().call({from: account}).then((result: any) => {
-        setTotalSupply(result);
-      });
+    contractFunc().call({from: account}).then((result: any) => {
+      setTotalSupply(result);
+    });
   }
 
   const getMyBalance = () => {
     const contractFunc = xen.methods['balanceOf'];        
-      contractFunc(account).call({from: account}).then((result: any) => {
-        setMyXENBalance(result);
-      });
+    contractFunc(account).call({from: account}).then((result: any) => {
+      setMyXENBalance(result);
+    });
   }
 
   const getMyBurnedXEN = () => {
     const contractFunc = xen.methods['userBurns'];        
-      contractFunc(account).call({from: account}).then((result: any) => {
-        setMyXENBurned(result);
-      });
+    contractFunc(account).call({from: account}).then((result: any) => {
+      setMyXENBurned(result);
+    });
   }
 
   const getMintFee = () => {
     const contractFunc = xen.methods['MintFee'];        
-      contractFunc().call({from: account}).then((result: any) => {
-        setMintFee(result);
-        console.log(result);
-      });
+    contractFunc().call({from: account}).then((result: any) => {
+      setMintFee(result);
+      console.log(result);
+    });
   }
 
   const getUserMintInfo = () => {
     let contractFunc = xen.methods['getUserMint'];        
-      contractFunc().call({from: account}).then((result: any) => {
-        setUserMintInfo(result);
-        contractFunc = rewardCalculator.methods['calculateMintReward']; 
-        contractFunc(result.rank, result.term, result.maturityTs, result.amplifier, result.eaaRate).call({from: account}).then((reward: any) => {
-          setMintReward(reward);
-        });
+    contractFunc().call({from: account}).then((result: any) => {
+      setUserMintInfo(result);
+      contractFunc = rewardCalculator.methods['calculateMintReward']; 
+      contractFunc(result.rank, result.term, result.maturityTs, result.amplifier, result.eaaRate).call({from: account}).then((reward: any) => {
+        setMintReward(reward);
       });
+    });
   }
 
   const getAllowance = () => {
     const contractFunc = xen.methods['allowance'];        
-      contractFunc(account, xNFTAddr[chainId]).call({from: account}).then((result: any) => {
-        console.log(result);
-        setAllowance(result);
-      });
+    contractFunc(account, xNFTAddr[chainId]).call({from: account}).then((result: any) => {
+      console.log(result);
+      setAllowance(result);
+    });
   }
 
   const subscribeXENEvent = () => {   
     const wssWeb3 = new Web3(wssUrl[chainId]);
-    // const eventABI: any = XENABI.filter((abiElement: any) => abiElement.name === eventName)[0];
-    // const eventSig = wssWeb3.eth.abi.encodeEventSignature(eventABI);
     const wssXEN = new wssWeb3.eth.Contract(XENABI, xenAddr[chainId]);
-    //const contractSubObject = wssXEN.events[eventName]({fromBlock: 'latest'});
     wssWeb3.eth.getBlockNumber().then((blockNumber: number) => {
       wssXEN.getPastEvents('RankClaimed', {fromBlock: blockNumber - 100000, toBlock: 'latest'}).then((events: any[]) => {
         let mintList: any[] = [];
@@ -266,7 +263,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
 
   const approve = () => {
     const contractFunc = xen.methods['approve']; 
-    const data = contractFunc(xNFTAddr[chainId], `0x${new BigNumber(1).shiftedBy(100).toString(16)}`).encodeABI();
+    const data = contractFunc(xNFTAddr[chainId], `0x${new BigNumber(1).shiftedBy(20).toString(16)}`).encodeABI();
     const tx = {
         from: account,
         to: xenAddr[chainId],
@@ -274,7 +271,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
         value: 0,
         gasLimit: 0
     }
-    contractFunc(xNFTAddr[chainId], `0x${new BigNumber(1).shiftedBy(100).toString(16)}`).estimateGas({from: account}).then((gasLimit: any) => {
+    contractFunc(xNFTAddr[chainId], `0x${new BigNumber(1).shiftedBy(20).toString(16)}`).estimateGas({from: account}).then((gasLimit: any) => {
       tx.gasLimit = gasLimit;
       web3.eth.sendTransaction(tx)
           .on('transactionHash', () => {

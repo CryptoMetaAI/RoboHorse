@@ -5,6 +5,7 @@ import { useWeb3React } from "@web3-react/core";
 import { XProxy } from 'components/templates/xenExtension/xProxy';
 import { XNFTs } from 'components/templates/xenExtension/xNFT';
 import { XEN } from 'components/templates/xenExtension/xen';
+import { DPool } from 'components/templates/xenExtension/dPool';
 import { chainId2NetworkName } from 'utils/config';
 
 const Home = () => {
@@ -74,11 +75,11 @@ const Home = () => {
               <XNFTs account={account || ''} web3={library} chainId={chainId || 0}/>
             </Container>
           </TabPanel>
-          {/* <TabPanel>
+          <TabPanel>
             <Container maxW="100%" width="150%"  p={3} marginTop={100} as="main" minH="70vh">
-              
+              <DPool account={account || ''} web3={library} chainId={chainId || 0}/>
             </Container>
-          </TabPanel> */}
+          </TabPanel>
         </TabPanels>
       </Tabs>
     </VStack>
