@@ -1,10 +1,10 @@
-const xenAddr: Record<number, string> = {1: '0x06450dEe7FD2Fb8E39061434BAbCFC05599a6Fb8', 56: 'BNB', 97: '0x0413409023D4689d8ED2db86a211254D1845b150', 137: 'Polygon'}
-const xNFTAddr: Record<number, string> = {1: '', 56: '', 97: '0x985e1f59Ddf98440E4Dfb0028f498639B5E0B158', 137: ''}
-const rewardCalculatorAddr: Record<number, string> = {1: '', 56: '', 97: '0x8E8D032040B64a4CE7bf9631338F1E7b8Ea9511f', 513100: '', 137: ''}
-const dPoolAddr: Record<number, string> = {1: '', 56: '', 97: '0x890fA99AD9461CdC7e1BA5788FCe31572226467B', 513100: '', 137: ''}
-const chainId2NetworkName: Record<number, string> = {1: 'Ethereum', 56: 'BSC', 97: 'BSC-Testnet', 137: 'Polygon', 80001: 'Mumbai'}
+const xenAddr: Record<number, string> = {1: '', 56: 'BNB', 97: '0xf6c2dD2616641F2C98cf379b02a565b01c08D4Ac', 137: 'Polygon', 42170: '0xcD7a02e76E2dfDf51f18172f61Bc7F052969DEBf'}
+const xNFTAddr: Record<number, string> = {1: '', 56: '', 97: '0x3D01d388829771A4DaA9aE48291487c9b4e73dfa', 137: '', 42170: '0x45f8557bbfA0dDF90A3B4E3f97e0E72648839638'}
+const rewardCalculatorAddr: Record<number, string> = {1: '', 56: '', 97: '0x8E8D032040B64a4CE7bf9631338F1E7b8Ea9511f', 513100: '', 137: '', 42170: '0x3C2438fC7F9e552037ce5F817BF3072aDD5Ab474'}
+const dPoolAddr: Record<number, string> = {1: '', 56: '', 97: '0xe6686E1cc9939FC43e1400A76E304e3AF1317A3a', 513100: '', 137: '', 42170: '0xACD351313c824cFBa070C405693aE8fe495395F8'}
+const chainId2NetworkName: Record<number, string> = {1: 'Ethereum', 56: 'BSC', 97: 'BSC-Testnet', 137: 'Polygon', 80001: 'Mumbai', 42170: 'Arbitrum-Nova'}
 const unit: Record<number, string> = {1: 'ETH', 56: 'BNB', 97: 'BNB', 137: 'MATIC', 80001: 'MATIC', 10001: 'ETHW', 513100: 'ETF'}
-const wssUrl: Record<number, string> = {1: '', 56: '', 97: 'wss://data-seed-prebsc-2-s1.binance.org:8545', 513100: '', 137: ''}
+const wssUrl: Record<number, string> = {1: '', 56: '', 97: 'wss://data-seed-prebsc-2-s1.binance.org:8545', 513100: '', 137: '', 42170: 'wss://nova.arbitrum.io/feed'}
 
 enum MergeType {
     FromAdd = 1,

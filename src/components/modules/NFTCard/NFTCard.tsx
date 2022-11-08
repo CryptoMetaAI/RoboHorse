@@ -18,7 +18,7 @@ import {
   FormLabel,
   Input,
   Radio, RadioGroup,
-  Checkbox
+  Checkbox,
 } from '@chakra-ui/react';
 import { QuestionOutlineIcon } from '@chakra-ui/icons'
 import { Eth } from '@web3uikit/icons';
@@ -288,10 +288,14 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, des
       <SimpleGrid columns={1} spacing={4} bgColor={descBgColor} padding={2.5} borderRadius="xl" marginTop={2}>
         <Box>
           <HStack alignItems={'center'} justify='space-between'>
-            <Button colorScheme='teal' variant='outline' disabled={account !== owner} onClick={modal1.onOpen}>Split</Button>
+            <Tooltip label={`DNFT could be split into smaller ones which have the number of burned XEN.`}>
+              <Button colorScheme='teal' variant='outline' disabled={account !== owner} onClick={modal1.onOpen}>Split</Button>
+            </Tooltip>
             <Button colorScheme='teal' variant='outline' disabled={account !== owner} onClick={modal2.onOpen}>Transfer</Button>
-            <Button colorScheme='teal' variant='outline' disabled={account !== owner} 
-                    onClick={() => deposit(tokenId)} isLoading={isApproving || isDepositing} loadingText={isApproving ? 'Approving' : 'Depositing'}>Deposit</Button>
+            <Tooltip label={`Deposit this DNFT into divident pool to earn ETH`}>
+              <Button colorScheme='teal' variant='outline' disabled={account !== owner} 
+                      onClick={() => deposit(tokenId)} isLoading={isApproving || isDepositing} loadingText={isApproving ? 'Approving' : 'Depositing'}>Deposit</Button>
+            </Tooltip>
           </HStack>
           <Checkbox marginTop='2' colorScheme='teal' onChange={(e) => setMergeDisplay(e.target.checked ? 'block' : 'none')}>Merge Value of Burned XEN in DNFT</Checkbox>
         </Box>

@@ -10,7 +10,7 @@ import { Box, SimpleGrid, Heading, HStack, Button,
 import { ArrowLeftIcon, ArrowRightIcon, RepeatIcon } from '@chakra-ui/icons';
 import { DPoolCard } from 'components/modules';
 import React, { FC, useEffect, useState } from 'react';
-import XNFT from 'abi/dNFT.json';
+import DNFT from 'abi/dNFT.json';
 import DPoolABI from 'abi/dPool.json';
 import {xNFTAddr, dPoolAddr} from 'utils/config';
 
@@ -23,7 +23,7 @@ type Web3Info = {
 const DPool: FC<Web3Info> = ({ account, web3, chainId }) => {
 
   const [dPoolList, setDPoolList] = useState<any[]>([]);
-  const [xNFT, setXNFT] =useState<any>(null);
+  const [dNFT, setDNFT] =useState<any>(null);
   const [dPool, setDPool] =useState<any>(null);
   const [dPoolPeroid, setDPoolPeroid] = useState<number>(0);
   const [curPage, setCurPage] = useState<number>(0);
@@ -32,7 +32,7 @@ const DPool: FC<Web3Info> = ({ account, web3, chainId }) => {
 
   useEffect(() => {
     if (web3 != null) {
-      setXNFT(new web3.eth.Contract(XNFT, xNFTAddr[chainId]));
+      setDNFT(new web3.eth.Contract(DNFT, xNFTAddr[chainId]));
       setDPool(new web3.eth.Contract(DPoolABI, dPoolAddr[chainId]));
     }
   }, [web3])
@@ -61,6 +61,7 @@ const DPool: FC<Web3Info> = ({ account, web3, chainId }) => {
         contractFunc(i).call({from: account}).then((poolInfo: any) => {
           poolInfo.index = i;
           poolInfoList.push(poolInfo);
+          console.log(poolInfo);
           if (poolInfoList.length == peroid) {
             setDPoolList(poolInfoList.filter((info: any) => info.endTime > 0 || info.index + 1 == peroid).sort((a: any, b: any) => b.index - a.index));
           }
@@ -89,7 +90,7 @@ const DPool: FC<Web3Info> = ({ account, web3, chainId }) => {
       {dPoolList?.length ? (
         <SimpleGrid  columns={3} spacing={10}>
           {dPoolList.filter((info: any) => info.index + 1 == dPoolPeroid).map((poolInfo, key) => (
-            <DPoolCard poolInfo={poolInfo} key={key} account={account} web3={web3} xNFT={xNFT} dPool={dPool} chainId={chainId}/>
+            <DPoolCard poolInfo={poolInfo} key={key} account={account} web3={web3} dNFT={dNFT} dPool={dPool} chainId={chainId}/>
           ))}
         </SimpleGrid>
       ) : (
@@ -120,7 +121,7 @@ const DPool: FC<Web3Info> = ({ account, web3, chainId }) => {
       {dPoolList?.length ? (
         <SimpleGrid  columns={3} spacing={10}>
           {dPoolList.filter((info: any) => info.index + 1 != dPoolPeroid).map((poolInfo, key) => (
-            <DPoolCard poolInfo={poolInfo} key={key} account={account} web3={web3} xNFT={xNFT} dPool={dPool} chainId={chainId}/>
+            <DPoolCard poolInfo={poolInfo} key={key} account={account} web3={web3} dNFT={dNFT} dPool={dPool} chainId={chainId}/>
           ))}
         </SimpleGrid>
       ) : (

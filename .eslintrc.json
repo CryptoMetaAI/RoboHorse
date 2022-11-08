@@ -7,5 +7,10 @@
     "@typescript-eslint/no-explicit-any": ["off"],
     "complexity": ["error", 20],
     "eqeqeq": ["off"]
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "jasmine": true
   }
 }

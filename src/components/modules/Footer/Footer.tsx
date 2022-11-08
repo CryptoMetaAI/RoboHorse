@@ -5,9 +5,16 @@ const Footer = () => {
   return (
     <Box textAlign={'center'} w="full" p={6}>      
       <Text>
-        🙋 You have questions? Ask in the{' '}
-        <Link href={"https://discord.gg/M4sJRzKp"} isExternal alignItems={'center'}>
-          Discord <ExternalLinkIcon />
+        <Link href={"https://twitter.com/0xmetazen"} isExternal alignItems={'center'}>
+          Buidler <ExternalLinkIcon />
+        </Link>
+        {'  |  '}
+        <Link href={"https://github.com/syslink/xen-contracts.git"} isExternal alignItems={'center'}>
+          Github <ExternalLinkIcon />
+        </Link>
+        {'  |  '}
+        <Link href={"https://bridge.arbitrum.io/"} isExternal alignItems={'center'}>
+        Arbitrum Bridge <ExternalLinkIcon />
         </Link>
       </Text>
     </Box>

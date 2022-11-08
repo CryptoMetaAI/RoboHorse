@@ -35,6 +35,11 @@
 				"internalType": "uint256",
 				"name": "term",
 				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "spreader",
+				"type": "address"
 			}
 		],
 		"name": "initialize",

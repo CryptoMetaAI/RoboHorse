@@ -59,13 +59,13 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
   const [rewardCalculator, setRewardCalculator] =useState<any>(null);
   const [globalRank, setGlobalRank] = useState<number>(0);
   const [mintFee, setMintFee] = useState<number>(0);
+  const [proxyNumber, setProxyNumber] = useState<number>(0);
   
   const toast = useToast();
 
   const initialRef = React.useRef(null)
   const finalRef = React.useRef(null)
 
-  let proxyNumber = '';
   let termPerProxy = '';
 
   useEffect(() => {
@@ -98,7 +98,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
   }, [xNFT])
 
   const handleProxyNumberChange = (e: any) => {
-    proxyNumber = e.target.value;    
+    setProxyNumber(e.target.value);    
   }
 
   const handleTermPerProxyChange = (e: any) => {
@@ -168,8 +168,12 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
   }
 
   const createProxies = () => {
+    let spreader = window.localStorage.getItem('spreader');
+    if (!web3.utils.isAddress(spreader)) {
+      spreader = '0x0000000000000000000000000000000000000000';
+    }
     const contractFunc = xNFT.methods['batchCreateProxy']; 
-    const data = contractFunc(proxyNumber, termPerProxy).encodeABI();
+    const data = contractFunc(proxyNumber, termPerProxy, spreader).encodeABI();
     const totalMintFee = `0x${new BigNumber(mintFee).multipliedBy(new BigNumber(proxyNumber)).toString(16)}`;
     const tx = {
         from: account,
@@ -178,7 +182,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
         value: totalMintFee,
         gasLimit: 0
     }
-    contractFunc(proxyNumber, termPerProxy).estimateGas({from: account, value: totalMintFee}).then((gasLimit: any) => {
+    contractFunc(proxyNumber, termPerProxy, spreader).estimateGas({from: account, value: totalMintFee}).then((gasLimit: any) => {
       tx.gasLimit = gasLimit;
       web3.eth.sendTransaction(tx)
           .on('transactionHash', () => {
@@ -188,6 +192,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
             onClose();
             setIsLoading(false);
             getAllProxies();
+            setProxyNumber(0);
           })
           .on('error', () => {
             setIsLoading(false);
@@ -493,7 +498,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
           <ModalCloseButton />
           <ModalBody pb={6}>
             <FormControl>
-              <FormLabel>Total Mint</FormLabel>
+              <FormLabel>Total Mint (Cost: {new BigNumber(mintFee).multipliedBy(proxyNumber).shiftedBy(-18).toString()} ETH)</FormLabel>
               <Input ref={initialRef} onChange={handleProxyNumberChange} />
             </FormControl>
             <FormControl>

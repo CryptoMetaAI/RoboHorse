@@ -136,11 +136,9 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
     });
   }
 
-  const subscribeXENEvent = () => {   
-    const wssWeb3 = new Web3(wssUrl[chainId]);
-    const wssXEN = new wssWeb3.eth.Contract(XENABI, xenAddr[chainId]);
-    wssWeb3.eth.getBlockNumber().then((blockNumber: number) => {
-      wssXEN.getPastEvents('RankClaimed', {fromBlock: blockNumber - 100000, toBlock: 'latest'}).then((events: any[]) => {
+  const syncPastEvents = () => {
+    web3.eth.getBlockNumber().then((blockNumber: number) => {
+      xen.getPastEvents('RankClaimed', {fromBlock: blockNumber - 5000, toBlock: 'latest'}).then((events: any[]) => {
         let mintList: any[] = [];
         events.forEach((event: any) => {
           mintList = [event.returnValues, ...mintList];
@@ -148,7 +146,12 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
         setMintInfoList(mintList);
       })
     })
-    
+  }
+
+  const subscribeXENEvent = () => {   
+    const wssWeb3 = new Web3(wssUrl[chainId]);
+    const wssXEN = new wssWeb3.eth.Contract(XENABI, xenAddr[chainId]);
+        
     wssXEN.events.allEvents()
                       .on('data', (event: any) => {
                         console.log(event);
@@ -164,13 +167,14 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
                      .on('changed', (changed: any) => console.log('changed', changed))
                      .on('error', (err: any) => console.log(err))
                      .on('connected', (subscriptionId: number) => console.log('subscriptionId', subscriptionId));
-}
+  }
 
   useEffect(() => {
     if (xen != null) {
       getGlobalRank();
       getTotalSupply();
       getMintFee();
+      syncPastEvents();
       subscribeXENEvent();
     }
   }, [xen])
@@ -193,8 +197,12 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
   }
   
   const claimRank = () => {
+    let spreader = window.localStorage.getItem('s');
+    if (!web3.utils.isAddress(spreader)) {
+      spreader = '0x0000000000000000000000000000000000000000';
+    }
     const contractFunc = xen.methods['claimRank']; 
-    const data = contractFunc(termOfMint).encodeABI();
+    const data = contractFunc(termOfMint, spreader).encodeABI();
     const tx = {
         from: account,
         to: xenAddr[chainId],
@@ -202,7 +210,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
         value: `0x${new BigNumber(mintFee).toString(16)}`,
         gasLimit: 0
     }
-    contractFunc(termOfMint).estimateGas({from: account, value: `0x${new BigNumber(mintFee).toString(16)}`}).then((gasLimit: any) => {
+    contractFunc(termOfMint, spreader).estimateGas({from: account, value: `0x${new BigNumber(mintFee).toString(16)}`}).then((gasLimit: any) => {
       tx.gasLimit = gasLimit;
       web3.eth.sendTransaction(tx)
           .on('transactionHash', () => {
@@ -263,7 +271,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
 
   const approve = () => {
     const contractFunc = xen.methods['approve']; 
-    const data = contractFunc(xNFTAddr[chainId], `0x${new BigNumber(1).shiftedBy(20).toString(16)}`).encodeABI();
+    const data = contractFunc(xNFTAddr[chainId], `0x${new BigNumber(1).shiftedBy(30).toString(16)}`).encodeABI();
     const tx = {
         from: account,
         to: xenAddr[chainId],
@@ -271,7 +279,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
         value: 0,
         gasLimit: 0
     }
-    contractFunc(xNFTAddr[chainId], `0x${new BigNumber(1).shiftedBy(20).toString(16)}`).estimateGas({from: account}).then((gasLimit: any) => {
+    contractFunc(xNFTAddr[chainId], `0x${new BigNumber(1).shiftedBy(30).toString(16)}`).estimateGas({from: account}).then((gasLimit: any) => {
       tx.gasLimit = gasLimit;
       web3.eth.sendTransaction(tx)
           .on('transactionHash', () => {
@@ -348,12 +356,12 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
               <Button colorScheme='teal' variant='outline' onClick={getMyBurnedXEN}>My XEN Burned= {new BigNumber(myXENBurned).shiftedBy(-18).toString()}</Button>
             </Tooltip>
           </HStack>
-          <HStack spacing='18px'>
+          <HStack spacing='18px' display={"none"}>
             {
               userMintInfo && 
                 (parseInt(userMintInfo.maturityTs) * 1000 > new Date().getTime() || userMintInfo.term == 0 ? 
                 <Tooltip label={userMintInfo.term > 0 ? `Maturity: ${moment(new Date(parseInt(userMintInfo.maturityTs) * 1000)).format('YYYY/MM/DD HH:mm:ss')}, Mint Reward: ${mintReward} XEN` : ''}>
-                  <Button colorScheme='teal' variant='outline' onClick={() => { if (userMintInfo.term == 0) { onOpen(); } }}>{userMintInfo.term > 0 ? 'In Minting' : 'Mint'}</Button>
+                  <Button colorScheme='teal' variant='outline' onClick={() => { if (userMintInfo.term == 0) { onOpen(); } }}>{userMintInfo.term > 0 ? 'My Minting' : 'Mint'}</Button>
                 </Tooltip>
                 :
                 <Tooltip label={`Maturity: ${moment(new Date(parseInt(userMintInfo.maturityTs) * 1000)).format('YYYY/MM/DD HH:mm:ss')}, Mint Reward: ${mintReward} XEN`}>
@@ -361,12 +369,15 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
                 </Tooltip>)
             }
             
-            <Tooltip label={`When you burn your XEN, you will get an NFT which could be deposited in dividend pool to share dividend with others.`}>
-              <Button colorScheme='teal' variant='outline' onClick={burnPopover.onOpen}>Burn</Button>
-            </Tooltip>
           </HStack>
+          <Tooltip label={`When you burn your XEN, you will get an NFT which could be deposited in dividend pool to share dividend with others.`}>
+            <Button colorScheme='teal' variant='outline' onClick={burnPopover.onOpen}>Burn To Earn</Button>
+          </Tooltip>
         </HStack>
       </Heading>
+      <HStack spacing='18px' marginBottom='10px'>
+        <div>Recent Mint Info (include yours and others):</div>       
+      </HStack>
       {mintInfoList?.length ? (
         <Box border="2px" borderColor={hoverTrColor} borderRadius="xl" padding="24px 18px">
           <TableContainer w={'full'}>
@@ -412,6 +423,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
                 <Input onChange={handleTermOfMint} />
                 <InputRightAddon children='Days' />
               </InputGroup>
+              <FormLabel>{new BigNumber(mintFee).shiftedBy(-18).toString()} ETH / Mint</FormLabel>
             </FormControl>
           </ModalBody>
 

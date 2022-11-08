@@ -1,5 +1,6 @@
-import { Heading, VStack } from '@chakra-ui/react';
-import { Container, Button, Tabs, TabList, TabPanels, Tab, TabPanel, Tooltip } from '@chakra-ui/react';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { Heading, VStack, Container, Button, Tabs, TabList, TabPanels, Tab, TabPanel, Tooltip } from '@chakra-ui/react';
 import { InjectedConnector } from '@web3-react/injected-connector';
 import { useWeb3React } from "@web3-react/core";
 import { XProxy } from 'components/templates/xenExtension/xProxy';
@@ -7,12 +8,22 @@ import { XNFTs } from 'components/templates/xenExtension/xNFT';
 import { XEN } from 'components/templates/xenExtension/xen';
 import { DPool } from 'components/templates/xenExtension/dPool';
 import { chainId2NetworkName } from 'utils/config';
+import { isEmptyObj } from 'utils/utils';
 
 const Home = () => {
   const { active, account, library, chainId, activate, deactivate } = useWeb3React()
-  
+  const router = useRouter()
+
+  useEffect(() => {
+    console.log(router.query);
+    const { s } = router.query;
+    if (!isEmptyObj(s)) {
+      window.localStorage.setItem('spreader', s as string);
+    }
+  });
+
   const injected = new InjectedConnector({
-    supportedChainIds: [1, 56, 97, 137, 80001, 42170],
+    supportedChainIds: [97, 42170],
   })
 
   async function connect() {
@@ -43,7 +54,7 @@ const Home = () => {
   return (
     <VStack w='full'>
       <Heading size="md" marginBottom={6}>
-        <Tooltip label={'Current supported network: BSC-Testnet, and the mainnet of Ethereum, BSC and Polygon will be supported soon.'}>
+        <Tooltip label={'Current supported network: Arbitrum-Nova and BSC-Testnet.'}>
           <Button onClick={() => wallet()} colorScheme='teal' variant='outline'>
             {active ? <span>{chainId2NetworkName[chainId || 0]}: <b>{account}</b></span> : <span>Connect to MetaMask</span>}
           </Button>  

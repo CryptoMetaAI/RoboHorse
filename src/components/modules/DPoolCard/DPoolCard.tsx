@@ -2,8 +2,20 @@ import {
   Box, HStack, Text, SimpleGrid, useColorModeValue, Tooltip, Button,
   useToast,
   VStack,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  FormControl,
+  FormLabel,
+  useDisclosure,
+  Checkbox, 
+  CheckboxGroup
 } from '@chakra-ui/react';
-import { QuestionOutlineIcon } from '@chakra-ui/icons'
+import { QuestionOutlineIcon, RepeatIcon } from '@chakra-ui/icons'
 import BigNumber from 'bignumber.js';
 import { Icon } from '@chakra-ui/react';
 import { SiExpertsexchange } from 'react-icons/si';
@@ -15,13 +27,14 @@ import moment from 'moment';
 type XNFTInfo = {
   account: string;
   web3: any;
-  xNFT: any;
+  dNFT: any;
   dPool: any;
   chainId: number;
   poolInfo: any;
 }
 
-const NFTCard: FC<XNFTInfo> = ({ account, web3, dPool, poolInfo }) => {
+const NFTCard: FC<XNFTInfo> = ({ account, web3, dPool, poolInfo, dNFT }) => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const bgColor = useColorModeValue('none', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const descBgColor = useColorModeValue('gray.100', 'gray.600');
@@ -30,14 +43,41 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, dPool, poolInfo }) => {
   const [pendingDividend, setPendingDividend] = useState<number>(0);
   const [curPoolInfo, setCurPoolInfo] = useState<any>(poolInfo);
   const [userInfo, setUserInfo] = useState<any>({});
+  const [userNFTInfos, setUserNFTInfos] = useState<any[]>([]);
+  const [redeemedNFTIds, setRedeemedTokenIds] = useState<number[]>([]);
 
   const toast = useToast();
 
   useEffect(() => {
     if (dPool != null) {     
-      refresh(); 
+      refresh();       
     }
   }, [])
+
+  const getUserNFTInfos = () => {
+    let contractFunc = dPool.methods['getUserNFTNumber'];
+    contractFunc(account, poolInfo.index).call({from: account}).then((amount: number) => {      
+      if (amount > 0) {
+        contractFunc = dPool.methods['getUserNFTIds'];
+        contractFunc(account, poolInfo.index, 0, amount).call({from: account}).then((nftIds: number[]) => {
+          console.log(nftIds);
+          const nftInfos: any[] = [];
+          nftIds.forEach((nftId: number) => {
+            contractFunc = dNFT.methods['balanceOf(uint256)'];
+            contractFunc(nftId).call({from: account}).then((balance: number) => {
+              const nftInfo = {id: 0, balance: 0};
+              nftInfo.id = nftId;
+              nftInfo.balance = new BigNumber(balance).shiftedBy(-18).toNumber();
+              nftInfos.push(nftInfo);
+              if (nftInfos.length === nftIds.length) {
+                setUserNFTInfos(nftInfos);
+              }
+            });
+          })
+        })
+      }      
+    })
+  }
   
   const getPendingDividend = () => {
     const contractFunc = dPool.methods['pendingDividend'];
@@ -66,6 +106,7 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, dPool, poolInfo }) => {
       getPendingDividend(); 
       getUserInfo();
       updatePoolInfo(); 
+      getUserNFTInfos();
     }
   }
 
@@ -103,42 +144,60 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, dPool, poolInfo }) => {
   }
 
 
-    const redeemDNFT = () => {
-      const contractFunc = dPool.methods['redeemAll']; 
-      const data = contractFunc(poolInfo.index).encodeABI();
-      const tx = {
-          from: account,
-          to: dPool._address,
-          data,
-          value: 0,
-          gasLimit: 0
-      }
-      contractFunc(poolInfo.index).estimateGas({from: account}).then((gasLimit: any) => {
-        tx.gasLimit = gasLimit;
-        web3.eth.sendTransaction(tx)
-            .on('transactionHash', () => {
-              setIsRedeeming(true);
-            })
-            .on('receipt', () => {
-              setIsRedeeming(false);
-              refresh();
-            })
-            .on('error', () => {
-              setIsRedeeming(false);
-              toast({
-                title: 'Failed',
-                description: "Redeem DNFT failed",
-                status: 'error',
-                position: 'bottom-right',
-                isClosable: true,
-              });
-            });
+  const redeemDNFT = () => {
+    if (redeemedNFTIds.length == 0) {
+      toast({
+        title: 'Warning',
+        description: "At least select one DNFT redeemed",
+        status: 'warning',
+        position: 'bottom-right',
+        isClosable: true,
       });
+      return;
     }
+    const contractFunc = dPool.methods['redeem']; 
+    const data = contractFunc(redeemedNFTIds, poolInfo.index).encodeABI();
+    const tx = {
+        from: account,
+        to: dPool._address,
+        data,
+        value: 0,
+        gasLimit: 0
+    }
+    contractFunc(redeemedNFTIds, poolInfo.index).estimateGas({from: account}).then((gasLimit: any) => {
+      tx.gasLimit = gasLimit;
+      web3.eth.sendTransaction(tx)
+          .on('transactionHash', () => {
+            setIsRedeeming(true);
+          })
+          .on('receipt', () => {
+            setIsRedeeming(false);
+            refresh();
+            onClose();
+          })
+          .on('error', () => {
+            setIsRedeeming(false);
+            toast({
+              title: 'Failed',
+              description: "Redeem DNFT failed",
+              status: 'error',
+              position: 'bottom-right',
+              isClosable: true,
+            });
+          });
+    });
+  }
+
+  const handleDNFTIdChange = (values: any[]) => {
+    setRedeemedTokenIds(values.map((value: string) => parseInt(value)));
+  }
 
   return (
     <>
     <Box bgColor={bgColor} padding={3} borderRadius="xl" borderWidth="1px" borderColor={borderColor}>
+      <HStack alignItems={'center'} justify={"flex-end"}>
+        <Button size='xs' colorScheme='teal' variant='outline' onClick={() => refresh()}><RepeatIcon /></Button>
+      </HStack>
       <SimpleGrid columns={1} spacing={4} bgColor={descBgColor} padding={2.5} borderRadius="xl" marginTop={2}>
         <HStack alignItems={'center'} justify={"space-between"}>
           <HStack alignItems={'center'} justify={"space-between"}>
@@ -166,17 +225,17 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, dPool, poolInfo }) => {
          <Box width='100%'>
             <HStack alignItems={'center'}>
               <Box as="h4" noOfLines={1} fontWeight="medium" fontSize="sm">
-              <Tooltip label={'Has Minted Out / Total Dividend'}><QuestionOutlineIcon w={3} h={3} marginRight='2px'/></Tooltip><strong>Dividend:</strong>
+              <Tooltip label={'Has Been Minted Out / Total Dividend In This Pool'}><QuestionOutlineIcon w={3} h={3} marginRight='2px'/></Tooltip><strong>Dividend:</strong>
               </Box>
               <Box as="h4" noOfLines={1} fontSize="small">
-                {new BigNumber(curPoolInfo.mintedOutDividend).shiftedBy(-18).toFixed(3)} / {new BigNumber(curPoolInfo.totalDividend).shiftedBy(-18).toFixed(3)} ETH
+                {new BigNumber(curPoolInfo.mintedOutDividend).shiftedBy(-18).toFixed(5)} / {new BigNumber(curPoolInfo.totalDividend).shiftedBy(-18).toFixed(5)} ETH
               </Box>
             </HStack>
           </Box>
           <Box width='100%'>
             <HStack alignItems={'center'}>
               <Box as="h4" noOfLines={1} fontWeight="medium" fontSize="sm">
-              <Tooltip label={'Your Burned / Total Burned'}><QuestionOutlineIcon w={3} h={3} marginRight='2px'/></Tooltip><strong>Burned:</strong>
+              <Tooltip label={'Your Deposited / Total Deposited XEN In this Pool'}><QuestionOutlineIcon w={3} h={3} marginRight='2px'/></Tooltip><strong>Deposited Amount:</strong>
               </Box>
               <Box as="h4" noOfLines={1} fontSize="small">
               {new BigNumber(userInfo.weight).shiftedBy(-18).toFixed(2)} / {new BigNumber(curPoolInfo.totalWeightOfNFT).shiftedBy(-18).toFixed(2)} XEN
@@ -186,10 +245,10 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, dPool, poolInfo }) => {
           <Box width='100%'>
             <HStack alignItems={'center'}>
               <Box as="h4" noOfLines={1} fontWeight="medium" fontSize="sm">
-              <strong>Pending Dividend:</strong>
+              <strong>Your Pending Dividend:</strong>
               </Box>
               <Box as="h4" noOfLines={1} fontSize="small">
-              {new BigNumber(pendingDividend).shiftedBy(-18).toFixed(3)} ETH
+              {new BigNumber(pendingDividend).shiftedBy(-18).toFixed(6)} ETH
               </Box>
             </HStack>
           </Box>
@@ -199,7 +258,7 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, dPool, poolInfo }) => {
               <Text fontSize='sm' as='b' color='white'>Dividend <Text fontSize='xs' as='b' color='gray'>/ Second</Text>:</Text>
               </Box>
               <Box as="h4" noOfLines={1} fontSize="small">
-              {new BigNumber(curPoolInfo.dividendPerSecond).shiftedBy(-18).toFixed(6)} ETH
+              {new BigNumber(curPoolInfo.dividendPerSecond).shiftedBy(-18).toFixed(9)} ETH
               </Box>
             </HStack>
           </Box>
@@ -217,13 +276,43 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, dPool, poolInfo }) => {
       <SimpleGrid columns={1} spacing={4} bgColor={descBgColor} padding={2.5} borderRadius="xl" marginTop={2}>
         <Box>
           <HStack alignItems={'center'} justify='space-between'>
-            <Button colorScheme='teal' variant='outline' onClick={claimDividend} isLoading={isClaiming} loadingText={'Claiming'}>Claim Dividend</Button>
-            <Button colorScheme='teal' variant='outline' onClick={redeemDNFT} isLoading={isRedeeming} loadingText={'Redeeming'}>Redeem DNFT</Button>
-            <Button colorScheme='teal' variant='outline' onClick={refresh}>Refresh</Button>
+            <Button size='sm' colorScheme='teal' variant='outline' onClick={claimDividend} isLoading={isClaiming} loadingText={'Claiming'}>Claim Dividend</Button>
+            <Button size='sm' colorScheme='teal' variant='outline' onClick={onOpen} isLoading={isRedeeming} loadingText={'Redeeming'}>Redeem DNFT</Button>
           </HStack>
         </Box>
       </SimpleGrid>
     </Box>
+    <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Redeem Your DNFT</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            <FormControl>
+              <FormLabel>DNFT to be redeemed:</FormLabel>
+              <CheckboxGroup colorScheme='teal' onChange={handleDNFTIdChange}>
+                <VStack spacing={[1, 5]} align='stretch'>
+                  {
+                    userNFTInfos.map((nftInfo: any) => {
+                      return  <Checkbox value={nftInfo.id}>tokenId = {nftInfo.id}, XEN = {nftInfo.balance}</Checkbox>
+                    })
+                  }
+                </VStack>
+              </CheckboxGroup>
+            </FormControl>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme='blue' mr={3} onClick={() => redeemDNFT()} isLoading={isRedeeming} loadingText='Redeeming'>
+              Redeem
+            </Button>
+            <Button onClick={onClose}>Cancel</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 };
