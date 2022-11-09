@@ -74,7 +74,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
   const finalRef = React.useRef(null)
 
   useEffect(() => {
-    if (web3 != null) {
+    if (chainId > 0 && web3 != null) {
       setXen(new web3.eth.Contract(XENABI, xenAddr[chainId]));
       setXNFT(new web3.eth.Contract(DNFT, xNFTAddr[chainId]));
       setRewardCalculator(new web3.eth.Contract(RewardCalculator, rewardCalculatorAddr[chainId]));
@@ -170,7 +170,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
   }
 
   useEffect(() => {
-    if (xen != null) {
+    if (chainId > 0 && xen != null) {
       getGlobalRank();
       getTotalSupply();
       getMintFee();
@@ -180,7 +180,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
   }, [xen])
 
   useEffect(() => {
-    if (xen != null && account != null) {
+    if (chainId > 0 && xen != null && account != null) {
       getUserMintInfo();
       getMyBalance();
       getAllowance();

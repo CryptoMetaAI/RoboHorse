@@ -31,14 +31,14 @@ const DPool: FC<Web3Info> = ({ account, web3, chainId }) => {
 
 
   useEffect(() => {
-    if (web3 != null) {
+    if (chainId > 0 && web3 != null) {
       setDNFT(new web3.eth.Contract(DNFT, xNFTAddr[chainId]));
       setDPool(new web3.eth.Contract(DPoolABI, dPoolAddr[chainId]));
     }
   }, [web3])
 
   useEffect(() => {
-    if (dPool != null) {            
+    if (chainId > 0 && dPool != null) {            
       getAllPools();
     }
   }, [dPool])

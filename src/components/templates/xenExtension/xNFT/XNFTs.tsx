@@ -61,14 +61,14 @@ const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
   const toast = useToast();
 
   useEffect(() => {
-    if (web3 != null) {
+    if (chainId > 0 && web3 != null) {
       setXNFT(new web3.eth.Contract(XNFT, xNFTAddr[chainId]));
       setDPool(new web3.eth.Contract(DPool, dPoolAddr[chainId]));
     }
   }, [web3])
 
   useEffect(() => {
-    if (xNFT != null) {      
+    if (chainId > 0 && xNFT != null) {      
       getTotalSupply();
       setPeroid('');
       setBMineNFT(false);
