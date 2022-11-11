@@ -370,7 +370,7 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
             }
             
           </HStack>
-          <Tooltip label={`When you burn your XEN, you will get an NFT which could be deposited in dividend pool to share dividend with others.`}>
+          <Tooltip label={`When you burn your XEN, you will get an NFT which could be deposited in dividend pool to mint ETH with others.`}>
             <Button colorScheme='teal' variant='outline' onClick={burnPopover.onOpen}>Burn To Earn</Button>
           </Tooltip>
         </HStack>
