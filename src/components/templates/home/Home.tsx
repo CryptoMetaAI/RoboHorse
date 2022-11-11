@@ -23,7 +23,7 @@ const Home = () => {
   });
 
   const injected = new InjectedConnector({
-    supportedChainIds: [97, 42170],
+    supportedChainIds: [97, 42161, 42170],
   })
 
   async function connect() {
@@ -54,7 +54,7 @@ const Home = () => {
   return (
     <VStack w='full'>
       <Heading size="md" marginBottom={6}>
-        <Tooltip label={'Current supported network: Arbitrum-Nova and BSC-Testnet.'}>
+        <Tooltip label={'Current supported network: Arbitrum-One/Nova and BSC-Testnet.'}>
           <Button onClick={() => wallet()} colorScheme='teal' variant='outline'>
             {active ? <span>{chainId2NetworkName[chainId || 0]}: <b>{account}</b></span> : <span>Connect to MetaMask</span>}
           </Button>  
