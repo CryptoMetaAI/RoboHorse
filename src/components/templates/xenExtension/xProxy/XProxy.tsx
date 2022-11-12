@@ -324,37 +324,39 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
     });
   }
 
-  const claimReward = (proxyInfo: any) => {
-    const contractFunc = xNFT.methods['claimReward'];  
-    const data = contractFunc(proxyInfo.address).encodeABI();
-    const tx = {
-        from: account,
-        to: xNFT._address,
-        data,
-        value: 0,
-        gasLimit: 0
-    }
-    contractFunc(proxyInfo.address).estimateGas({from: account}).then((gasLimit: any) => {
-      tx.gasLimit = gasLimit;
-      web3.eth.sendTransaction(tx)
-          .on('transactionHash', () => {
-            setClaimInfo(proxyInfo.address, true);
-          })
-          .on('receipt', () => {
-            onClose();
-            setClaimInfo(proxyInfo.address, false);
-            getOneProxy(proxyInfo.address, updateOneProxy);
-          })
-          .on('error', () => {
-            setClaimInfo(proxyInfo.address, false);
-            toast({
-              title: 'Failed',
-              description: "Claim failed",
-              status: 'error',
-              position: 'bottom-right',
-              isClosable: true,
+  const withdrawXEN = (proxyInfo: any) => {
+    xen.methods["balanceOf"](proxyInfo.address).call({from: account}).then((amount: number) => {
+      const contractFunc = xNFT.methods['withdrawXEN'];  
+      const data = contractFunc(proxyInfo.address, `0x${new BigNumber(amount).toString(16)}`).encodeABI();
+      const tx = {
+          from: account,
+          to: xNFT._address,
+          data,
+          value: 0,
+          gasLimit: 0
+      }
+      contractFunc(proxyInfo.address, `0x${new BigNumber(amount).toString(16)}`).estimateGas({from: account}).then((gasLimit: any) => {
+        tx.gasLimit = gasLimit;
+        web3.eth.sendTransaction(tx)
+            .on('transactionHash', () => {
+              setClaimInfo(proxyInfo.address, true);
+            })
+            .on('receipt', () => {
+              onClose();
+              setClaimInfo(proxyInfo.address, false);
+              getOneProxy(proxyInfo.address, updateOneProxy);
+            })
+            .on('error', () => {
+              setClaimInfo(proxyInfo.address, false);
+              toast({
+                title: 'Failed',
+                description: "Claim failed",
+                status: 'error',
+                position: 'bottom-right',
+                isClosable: true,
+              });
             });
-          });
+      });
     });
   }
 
@@ -458,13 +460,13 @@ const XProxy: FC<Web3Info> = ({ account, web3, chainId }) => {
                         {
                           proxy.claimed ? 
                             proxy.xNFTIds.length === 0 && proxy.balance > 0 ? 
-                              <Tooltip label={'Token will be claimed to your account from proxy contract'}>
-                                <Button colorScheme='teal' variant='outline' isLoading={isClaiming[proxy.address]} loadingText='Claiming' onClick={() => claimReward(proxy)}>Claim Reward</Button>
+                              <Tooltip label={'XEN will be claimed to your account from proxy contract'}>
+                                <Button colorScheme='teal' variant='outline' isLoading={isClaiming[proxy.address]} loadingText='Claiming' onClick={() => withdrawXEN(proxy)}>Claim Reward</Button>
                               </Tooltip>
                               :
                               null
                             :
-                            <Tooltip label={'Token will be stored in proxy contract when claimed'}>
+                            <Tooltip label={'XEN will be stored in proxy contract when claimed'}>
                               <Button colorScheme='teal' variant='outline' isLoading={isClaiming[proxy.address]} loadingText='Claiming' onClick={() => claimMintReward(proxy)}>Claim Mint Reward</Button>
                             </Tooltip>
                         }

@@ -9,6 +9,7 @@ import { XEN } from 'components/templates/xenExtension/xen';
 import { DPool } from 'components/templates/xenExtension/dPool';
 import { chainId2NetworkName } from 'utils/config';
 import { isEmptyObj } from 'utils/utils';
+import { getEllipsisTxt } from 'utils/format';
 
 const Home = () => {
   const { active, account, library, chainId, activate, deactivate } = useWeb3React()
@@ -56,7 +57,7 @@ const Home = () => {
       <Heading size="md" marginBottom={6}>
         <Tooltip label={'Current supported network: Arbitrum-One/Nova, Optimism and BSC-Testnet.'}>
           <Button onClick={() => wallet()} colorScheme='teal' variant='outline'>
-            {active ? <span>{chainId2NetworkName[chainId || 0]}: <b>{account}</b></span> : <span>Connect to MetaMask</span>}
+            {active ? <span>{chainId2NetworkName[chainId || 0]}: <b>{getEllipsisTxt(account as string)}</b></span> : <span>Connect to MetaMask</span>}
           </Button>  
         </Tooltip>  
       </Heading>

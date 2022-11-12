@@ -25,6 +25,7 @@ import { Eth } from '@web3uikit/icons';
 import React, { FC, useEffect, useState} from 'react';
 import { MergeType } from 'utils/config';
 import BigNumber from 'bignumber.js';
+import { getEllipsisTxt } from 'utils/format';
 
 
 type XNFTInfo = {
@@ -281,7 +282,7 @@ const NFTCard: FC<XNFTInfo> = ({ account, web3, xNFT, dPool, tokenId, owner, des
           <strong>owner:</strong>
           </Box>
           <Box as="h4" noOfLines={1} fontSize="sm">
-            {owner}
+            {getEllipsisTxt(owner)}
           </Box>
         </HStack>
       </Box>
