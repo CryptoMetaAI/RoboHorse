@@ -99,8 +99,9 @@ const XNFTs: FC<Web3Info> = ({ account, web3, chainId }) => {
         contractFunc = xNFT.methods['tokenOfOwnerByIndex'];
         for (let i = 0; i < myBalance; i++) {
           contractFunc(account, i).call({from: account}).then((tokenId: number) => {
+            
             tokenIds.push(tokenId);
-            if (tokenIds.length === myBalance) {
+            if (tokenIds.length - myBalance === 0) {        
               setMyTokens(tokenIds);
             }
           })
