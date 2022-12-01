@@ -1,60 +1,56 @@
-import { InjectedConnector } from 'wagmi/connectors/injected';
-import { signIn, signOut, useSession } from 'next-auth/react';
-import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
-import apiPost from 'utils/apiPost';
-import { Button, Text, HStack, Avatar, useToast } from '@chakra-ui/react';
+import { Button, Text, HStack, Avatar, Tooltip } from '@chakra-ui/react';
 import { getEllipsisTxt } from 'utils/format';
+import React from 'react';
+import { InjectedConnector } from '@web3-react/injected-connector';
+import { useWeb3React } from "@web3-react/core";
+
 
 const ConnectButton = () => {
-  const { connectAsync } = useConnect({ connector: new InjectedConnector() });
-  const { disconnectAsync } = useDisconnect();
-  const { isConnected } = useAccount();
-  const { signMessageAsync } = useSignMessage();
-  const toast = useToast();
-  const { data } = useSession();
+  const { active, account, library, chainId, activate, deactivate } = useWeb3React()
+ 
+  const injected = new InjectedConnector({
+    supportedChainIds: [1, 5, 97, 10, 42161, 42170],
+  })
 
-  const handleAuth = async () => {
-    if (isConnected) {
-      await disconnectAsync();
-    }
+  async function connect() {
     try {
-      const { account, chain } = await connectAsync();
-
-      const userData = { address: account, chain: chain.id, network: 'evm' };
-
-      const { message } = await apiPost('/auth/request-message', userData);
-      const signature = await signMessageAsync({ message });
-
-      await signIn('credentials', { message, signature, callbackUrl: '/' });
-    } catch (e) {
-      toast({
-        title: 'Oops, something is wrong...',
-        description: (e as { message: string })?.message,
-        status: 'error',
-        position: 'top-right',
-        isClosable: true,
-      });
+      console.log('connect')
+      await activate(injected)
+    } catch (ex) {
+      console.log(ex)
     }
-  };
+  }
 
-  const handleDisconnect = async () => {
-    await disconnectAsync();
-    signOut({ callbackUrl: '/' });
-  };
+  async function disconnect() {
+    try {
+      deactivate()
+    } catch (ex) {
+      console.log(ex)
+    }
+  }
 
-  if (data?.user) {
+  function wallet() {
+    if (active) {
+      disconnect();
+    } else {
+      connect();
+    }
+  }
+
+  if (active) {
     return (
-      <HStack onClick={handleDisconnect} cursor={'pointer'}>
-        <Avatar size="xs" />
-        <Text fontWeight="medium">{getEllipsisTxt(data.user.address)}</Text>
+      <HStack onClick={disconnect} cursor={'pointer'}>
+        <Text fontWeight="medium">{getEllipsisTxt(account as string)}</Text>
       </HStack>
     );
   }
 
   return (
-    <Button size="sm" onClick={handleAuth} colorScheme="blue">
-      Connect Wallet
-    </Button>
+    <Tooltip label={'Current supported network: Arbitrum-One/Nova, Optimism and BSC-Testnet.'}>
+      <Button onClick={() => wallet()} colorScheme='teal' variant='outline'>
+        Connect Wallet
+      </Button>  
+    </Tooltip>  
   );
 };
 

@@ -13,87 +13,13 @@ import { getEllipsisTxt } from 'utils/format';
 
 const Home = () => {
   const { active, account, library, chainId, activate, deactivate } = useWeb3React()
-  const router = useRouter()
-
-  useEffect(() => {
-    console.log(router.query);
-    const { s } = router.query;
-    if (!isEmptyObj(s)) {
-      window.localStorage.setItem('spreader', s as string);
-    }
-  });
-
-  const injected = new InjectedConnector({
-    supportedChainIds: [97, 10, 42161, 42170],
-  })
-
-  async function connect() {
-    try {
-      console.log('connect')
-      await activate(injected)
-    } catch (ex) {
-      console.log(ex)
-    }
-  }
-
-  async function disconnect() {
-    try {
-      deactivate()
-    } catch (ex) {
-      console.log(ex)
-    }
-  }
-
-  function wallet() {
-    if (active) {
-      disconnect();
-    } else {
-      connect();
-    }
-  }
+  
 
   return (
-    <VStack w='full'>
-      <Heading size="md" marginBottom={6}>
-        <Tooltip label={'Current supported network: Arbitrum-One/Nova, Optimism and BSC-Testnet.'}>
-          <Button onClick={() => wallet()} colorScheme='teal' variant='outline'>
-            {active ? <span>{chainId2NetworkName[chainId || 0]}: <b>{getEllipsisTxt(account as string)}</b></span> : <span>Connect to MetaMask</span>}
-          </Button>  
-        </Tooltip>  
-      </Heading>
-
-      
-      <Tabs width="150%">
-        <TabList>
-          <Tab>XEN</Tab>
-          <Tab>Batch Mint</Tab>
-          <Tab>Dividendable NFT</Tab>
-          <Tab>Dividend Pool</Tab>
-        </TabList>
-
-        <TabPanels>
-          <TabPanel>
-            <Container maxW="100%" width="150%" p={3} marginTop={100} as="main" minH="70vh">
-              <XEN account={account || ''} web3={library} chainId={chainId || 0}/>
-            </Container>
-          </TabPanel>
-          <TabPanel>
-            <Container maxW="100%" width="150%" p={3} marginTop={100} as="main" minH="70vh">
-              <XProxy account={account || ''} web3={library} chainId={chainId || 0}/>
-            </Container>
-          </TabPanel>
-          <TabPanel>
-            <Container maxW="100%" width="150%"  p={3} marginTop={100} as="main" minH="70vh">
-              <XNFTs account={account || ''} web3={library} chainId={chainId || 0}/>
-            </Container>
-          </TabPanel>
-          <TabPanel>
-            <Container maxW="100%" width="150%"  p={3} marginTop={100} as="main" minH="70vh">
-              <DPool account={account || ''} web3={library} chainId={chainId || 0}/>
-            </Container>
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
+    <VStack w='100%' justify='center'>
+      <Container maxW="100%" width="100%" p={3} as="main" minH="70vh">
+        <XProxy account={account || ''} web3={library} chainId={chainId || 0}/>
+      </Container>
     </VStack>
   );
 };
