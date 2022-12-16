@@ -12,7 +12,6 @@ import {
     Box,
     HStack,
     useColorModeValue,
-    useToast,
     useDisclosure,
     Modal,
     ModalOverlay,

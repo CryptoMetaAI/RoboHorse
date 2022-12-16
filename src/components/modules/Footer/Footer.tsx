@@ -9,12 +9,12 @@ const Footer = () => {
           Buidler <ExternalLinkIcon />
         </Link>
         {'  |  '}
-        <Link href={"https://github.com/syslink/xen-contracts.git"} isExternal alignItems={'center'}>
+        <Link href={"https://github.com/syslink/robohorse"} isExternal alignItems={'center'}>
           Github <ExternalLinkIcon />
         </Link>
         {'  |  '}
-        <Link href={"https://bridge.arbitrum.io/"} isExternal alignItems={'center'}>
-        Arbitrum Bridge <ExternalLinkIcon />
+        <Link href={"https://discord.gg/E6JBXSxJ"} isExternal alignItems={'center'}>
+        Discord <ExternalLinkIcon />
         </Link>
       </Text>
     </Box>
