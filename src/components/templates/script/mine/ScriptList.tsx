@@ -39,6 +39,7 @@ const ScriptList: FC = () => {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
+  const [scriptsObj, setScriptsObj] =useState<any>(null);
   const [scriptList, setScriptList] =useState<any[]>([]);
   const [scriptName, setScriptName] =useState<string>('');
   const [scriptDesc, setScriptDesc] =useState<string>('');
@@ -61,11 +62,13 @@ const ScriptList: FC = () => {
   const initialRef = React.useRef(null)
   const lsName = 'scriptList';
 
+
   useEffect(() => {
     var scriptsInfo = global.localStorage.getItem(lsName);
     if (isEmptyObj(scriptsInfo)) {
       scriptsInfo = '{}';
     }
+    setScriptsObj(JSON.parse(scriptsInfo as string));
     var tmpList = Object.entries(JSON.parse(scriptsInfo as string)).map(entry => entry[1]);
     tmpList = tmpList.sort((a: any, b: any) => b.createdTime - a.createdTime);
     setScriptList(tmpList);
@@ -240,7 +243,7 @@ const ScriptList: FC = () => {
     scriptList.push({name: scriptName, desc: scriptDesc, createdTime: new Date().getTime()});
     scriptList.sort((a: any, b: any) => b.createdTime - a.createdTime);
     setScriptList(JSON.parse(JSON.stringify(scriptList)));
-    global.localStorage.setItem(lsName, JSON.stringify(setScriptList));
+    global.localStorage.setItem(lsName, JSON.stringify(scriptList));
     onClose();
   }
 
@@ -261,7 +264,7 @@ const ScriptList: FC = () => {
         {scriptList?.length ? (
           <SimpleGrid  columns={3} spacing={10}>
           {scriptList.map((scriptInfo, key) => (
-              <ScriptCard {...scriptInfo}/>
+              <ScriptCard {...scriptInfo} scriptObj={scriptsObj[scriptInfo.name]}/>
           ))}
           </SimpleGrid>
       ) : (

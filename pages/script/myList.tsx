@@ -1,13 +1,13 @@
 import { Default } from 'components/layouts/Default';
-import { RPCList } from 'components/templates/config/rpc';
+import { ScriptList } from 'components/templates/script/mine';
 import type { NextPage } from 'next';
 
-const RPCListPage: NextPage = () => {
+const ScriptListPage: NextPage = () => {
   return (
-    <Default pageName="RPCList">
-      <RPCList />
+    <Default pageName="ScriptList">
+      <ScriptList />
     </Default>
   );
 };
 
-export default RPCListPage;
+export default ScriptListPage;

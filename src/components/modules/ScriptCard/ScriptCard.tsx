@@ -19,37 +19,130 @@ import {
   Input,
   Avatar,
 } from '@chakra-ui/react';
-import { QuestionOutlineIcon } from '@chakra-ui/icons'
-import { Eth } from '@web3uikit/icons';
-import { FaTwitter, FaUsers, FaEthereum } from 'react-icons/fa';
-import { FcOvertime } from 'react-icons/fc';
+import { TbDeviceHeartMonitor } from 'react-icons/tb';
+import { MdOutlineDescription } from 'react-icons/md';
+import { SiBlockchaindotcom } from 'react-icons/si';
+import { BiPencil } from 'react-icons/bi';
+import { VscDebugStart, VscDebugStop, VscDebugPause, VscDebugRestart } from 'react-icons/vsc';
 import React, { FC, useEffect, useState} from 'react';
 import { useWeb3React } from "@web3-react/core";
 import { useRouter } from 'next/router';
+import { isEmptyObj, getSpanTime } from 'utils/utils';
+import { ETHLogo, BSCLogo, AvaxLogo, PolygonLogo, ArbitrumLogo, OptimismLogo } from 'utils/chainLogos';
 
-
-type KOLNFTInfo = {
-  nftOwner: string;
-  nft721Id: number;
-  endTime: number;
-  maxFansNumber: number;
-  slotId: number;
-  image: string;
-  symbol: string;
-  symbolOfFansNFT: string;
-  fansNFT: any;
-  twitterId: string;
+type ScriptInfo = {
+  name: string;
+  desc: string;
+  createdTime: number;
+  scriptObj: any;
 }
 
-const KOLNFTCard: FC<KOLNFTInfo> = ({ nftOwner, nft721Id, endTime, maxFansNumber, slotId, image, symbol, symbolOfFansNFT, twitterId, fansNFT }) => {
+enum ScriptStatus {
+  Idle = 1,
+  Running,
+  Pause
+}
+
+const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
   const bgColor = useColorModeValue('none', 'gray.700');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const descBgColor = useColorModeValue('gray.100', 'gray.600');
+  const linkActiveColor = useColorModeValue('gray.200', 'gray.600');
 
   const { account, library: web3 } = useWeb3React();
+  let num = 0;
+  let chainIdList: number[] = [];
+  if (!isEmptyObj(scriptObj)) {
+    const entries = Object.entries(scriptObj.subScripts);
+    num = entries.length;
+    const chainIds: any = {};
+    entries.map((entry: any) => {
+      const subScript = entry[1];
+      const chainId = subScript.chain;
+      if (isEmptyObj(chainIds[chainId])) {
+        chainIds[chainId] = true;
+      }
+    })
+    chainIdList = Object.keys(chainIds).map((chainId: string) => parseInt(chainId));
+  }
 
-  const router = useRouter();
+  const [subScriptNum, setSubScriptNum] = useState<number>(num);
+  const [chainList, setChainList] = useState<number[]>(chainIdList);
+  const [curStatus, setCurStatus] = useState<ScriptStatus>(ScriptStatus.Idle);
+
   const modal1 = useDisclosure();
+  const chainLogo: Record<number, any> = {1: <ETHLogo />, 5: <ETHLogo />, 10: <OptimismLogo />, 97: <BSCLogo />, 
+                     42161: <ArbitrumLogo />, 42170: <ArbitrumLogo />, 43114: <AvaxLogo />, 
+                     80001: <PolygonLogo />}
+
+  useEffect(() => {
+    
+  });
+
+  const getScriptStatusButton = () => {
+    switch(curStatus) {
+      case ScriptStatus.Idle:
+        return <Tooltip label={"run this script"}>
+                <Button 
+                  size='xs'
+                  colorScheme='yellow' 
+                  variant='outline' 
+                  leftIcon={<VscDebugStart />}
+                  onClick={() => setCurStatus(ScriptStatus.Running)}/>
+              </Tooltip>
+        break;
+      case ScriptStatus.Running:
+        return <>
+              <Tooltip label={"pause this script"}>
+                <Button 
+                  size='xs'
+                  colorScheme='yellow' 
+                  variant='outline' 
+                  leftIcon={<VscDebugPause />}
+                  onClick={() => setCurStatus(ScriptStatus.Pause)}/>
+              </Tooltip>
+              <Tooltip label={"stop this script"}>
+                <Button 
+                  size='xs'
+                  colorScheme='yellow' 
+                  variant='outline' 
+                  leftIcon={<VscDebugStop />}
+                  onClick={() => setCurStatus(ScriptStatus.Idle)}/>
+              </Tooltip>
+          </>
+        break;
+      case ScriptStatus.Pause:
+        return <>
+              <Tooltip label={"restart this script"}>
+                <Button 
+                  size='xs'
+                  colorScheme='yellow' 
+                  variant='outline' 
+                  leftIcon={<VscDebugRestart />}
+                  onClick={() => setCurStatus(ScriptStatus.Running)}/>
+              </Tooltip>
+              <Tooltip label={"stop this script"}>
+                <Button 
+                  size='xs'
+                  colorScheme='yellow' 
+                  variant='outline' 
+                  leftIcon={<VscDebugStop />}
+                  onClick={() => setCurStatus(ScriptStatus.Idle)}/>
+              </Tooltip>
+          </>
+        break;
+    }
+  }
+
+  const getChainLogoList = () => {
+    return chainList.map((chainId: number) => {
+      const logo = chainLogo[chainId];
+      if (isEmptyObj(logo)) {
+        return <ETHLogo />;
+      }
+      return logo;
+    });
+  }
 
   const [isRedeeming, setIsRedeeming] = useState<boolean>(false);
   const [isComfirming, setIsComfirming] = useState<boolean>(false);
@@ -59,185 +152,92 @@ const KOLNFTCard: FC<KOLNFTInfo> = ({ nftOwner, nft721Id, endTime, maxFansNumber
 
   const toast = useToast();
   const initialRef = React.useRef(null);
-  twitterId = twitterId.startsWith('@') ? twitterId.substr(1) : twitterId; 
 
-  useEffect(() => {
-    console.log(endTime)
-    setLeftDays(parseInt(((endTime - Date.parse(new Date().toString()) / 1000) / (3600 * 24)).toString()));
-    if (fansNFT != null) {
-      const contractFunc = fansNFT.methods['tokenSupplyInSlot']; 
-      contractFunc(slotId).call().then((totalSupply: number) => {
-        setTotalSupplyInSlot(totalSupply);
-      });
-    }
-  }, [fansNFT]);
-
-  const redeem = () => {
-    const contractFunc = fansNFT.methods['redeemNFT']; 
-    const data = contractFunc(nft721Id).encodeABI();
-    const tx = {
-        from: account,
-        to: fansNFT._address,
-        data,
-        value: 0,
-        gasLimit: 0
-    }
-    contractFunc(nft721Id).estimateGas({from: account}).then((gasLimit: any) => {
-      tx.gasLimit = gasLimit;
-      web3.eth.sendTransaction(tx)
-          .on('transactionHash', () => {
-            setIsRedeeming(true);
-          })
-          .on('receipt', () => {
-            modal1.onClose();
-            setIsRedeeming(false);
-          })
-          .on('error', () => {
-            setIsRedeeming(false);
-            toast({
-              title: 'Failed',
-              description: "Redeem NFT failed",
-              status: 'error',
-              position: 'bottom-right',
-              isClosable: true,
-            });
-          });
-    });
-  }
-
-  const extendEndTime = () => {
-    const newEndTime = days * 3600 * 24 + parseInt(endTime.toString());
-    const contractFunc = fansNFT.methods['extendEndTime']; 
-    const data = contractFunc(slotId, newEndTime).encodeABI();
-    const tx = {
-        from: account,
-        to: fansNFT._address,
-        data,
-        value: 0,
-        gasLimit: 0
-    }
-    contractFunc(slotId, newEndTime).estimateGas({from: account}).then((gasLimit: any) => {
-      tx.gasLimit = gasLimit;
-      web3.eth.sendTransaction(tx)
-          .on('transactionHash', () => {
-            setIsComfirming(true);
-          })
-          .on('receipt', () => {
-            modal1.onClose();
-            setIsComfirming(false);
-            endTime = newEndTime;
-            setLeftDays(parseInt(((newEndTime - Date.parse(new Date().toString()) / 1000) / (3600 * 24)).toString()));
-          })
-          .on('error', () => {
-            setIsComfirming(false);
-            toast({
-              title: 'Failed',
-              description: "Fail to extend end time",
-              status: 'error',
-              position: 'bottom-right',
-              isClosable: true,
-            });
-          });
-    });
-  }
-
+  /*
+  子脚本数量，体现复杂度
+  涉及的链
+  执行/暂停/继续/停止
+  查看运行日志
+  ES上传/修改/删除脚本：是否分享，分享条件，是否加密
+  创建/更新时间
+  */
   return (
     <>
-    <Box bgColor={bgColor} padding={3} borderRadius="xl" borderWidth="1px" borderColor={borderColor}>
+    <Box bgColor={bgColor} padding={3} borderRadius="xl" borderWidth="1px" 
+         borderColor={borderColor} onClick={() => {}} cursor="pointer"
+         _hover={{
+          textDecoration: 'none',
+          borderColor: linkActiveColor,
+        }}>
       <HStack alignItems={'center'} justify={"flex-start"}>
         <Avatar 
+          name={name}
           opacity="0.8" 
-          size='lg' 
-          name={twitterId} 
-          src={`https://unavatar.io/twitter/${twitterId}`}
-          onClick={() => window.open (`https://twitter.com/${twitterId}`, '_blank')}
-          cursor="pointer">
+          size='lg'>
         </Avatar>
         <VStack align='stretch'>
-          <Box as="h4" noOfLines={1} fontSize="sm">
-            @{twitterId}
+          <Box fontWeight="semibold" as="h4" noOfLines={1}>
+            {name}
+            <Tooltip label={"modify script name/description"}>
+              <Button 
+                ml={1}
+                cursor="point"
+                size={2}
+                colorScheme='blue' 
+                variant='outline' 
+                leftIcon={<BiPencil />}/>
+            </Tooltip>
           </Box>
           <Box as="h4" noOfLines={1} fontSize="sm">   
             <HStack>
-              <Button 
-                size='xs'
-                colorScheme='twitter' 
-                variant='outline' 
-                onClick={() => window.open (`https://twitter.com/${twitterId}`, '_blank')}>
-                <FaTwitter/>    
-              </Button>
-              <Tooltip label={"number of users who have your fans NFT"}>
+              <Tooltip label={"number of subscripts"}>
+                <Button 
+                  size='xs'
+                  colorScheme='twitter' 
+                  variant='outline'
+                  leftIcon={<MdOutlineDescription />}>
+                  {subScriptNum}   
+                </Button>
+              </Tooltip>
+
+              <Tooltip label={"save it on blockchain"}>
                 <Button 
                   size='xs'
                   colorScheme='pink' 
                   variant='outline' 
-                  leftIcon={<FaUsers />}
-                  onClick={() => router.push(`/fansnft/${fansNFT._address}/kolnftlist/${slotId}/fansNFTList?symbol=${symbolOfFansNFT}`)}>
-                    {totalSupplyInSlot} / {maxFansNumber}
+                  leftIcon={<SiBlockchaindotcom />}>
                 </Button>
               </Tooltip>
-              <Tooltip label={"trade volumn"}>
+              {
+                getScriptStatusButton()
+              }
+              <Tooltip label={"show the running log"}>
                 <Button 
-                  size='xs'
-                  colorScheme='yellow' 
-                  variant='outline' 
-                  leftIcon={<FaEthereum />}>
-                    0
-                </Button>
-              </Tooltip>
-              <Tooltip label={"left days"}>
-                <Button 
-                  cursor="initial"
+                  cursor="point"
                   size='xs'
                   colorScheme='blue' 
                   variant='outline' 
-                  leftIcon={<FcOvertime />}>
-                    {leftDays}
-                </Button>
+                  leftIcon={<TbDeviceHeartMonitor />}/>
               </Tooltip>
+            </HStack>
+          </Box>
+          <Box as="h4" noOfLines={1} fontSize="sm">
+            <HStack>
+              { getChainLogoList() }
             </HStack>
           </Box>
         </VStack>
       </HStack>
       <HStack alignItems={'center'} justify={"center"} mt={5}>
-        <Box>
-          <Image
-            src={image}
-            alt={'KOLNFT'}   
-            objectFit="fill"
-            cursor="pointer"
-            onClick={() => router.push(`/fansnft/${fansNFT._address}/kolnftlist/${slotId}/fansNFTList?symbol=${symbolOfFansNFT}`)}
-          />
+        <Box fontWeight="semibold" as="h4" fontSize="sm" noOfLines={1}>
+          {desc}
         </Box>
-      </HStack>
-      <HStack alignItems={'center'} justify={"space-between"} mt="5">
-        <Box fontWeight="semibold" as="h4" noOfLines={1}>
-          {symbol} # {nft721Id}<Tooltip label={"NFT-721 deposited in FansNFT contract"}><QuestionOutlineIcon w={4} h={4} marginLeft='2px'/></Tooltip>
+      </HStack>  
+      <HStack alignItems={'center'} justify={"flex-end"} mt={5}>
+        <Box fontWeight="semibold" as="h4" fontSize="sm" noOfLines={1}>
+          {getSpanTime(createdTime / 1000)}
         </Box>
-        <HStack alignItems={'center'}>
-          <Eth fontSize="20px" />
-          <Box as="h4" noOfLines={1} fontWeight="medium" fontSize="smaller">
-            ERC3525
-          </Box>
-        </HStack>
-      </HStack>
-      {
-        account?.localeCompare(nftOwner, 'en', { sensitivity: 'base' }) === 0 ? 
-          <SimpleGrid columns={1} spacing={4} bgColor={descBgColor} padding={2.5} borderRadius="xl" marginTop={4}>
-            <Box>
-              <HStack alignItems={'center'} justify='space-between'>
-                <Tooltip label={`This NFT-721 could be redeemed after ${leftDays} days.`}>
-                  <Button colorScheme='teal' variant='outline' disabled={account !== nftOwner} onClick={redeem} isLoading={isRedeeming} loadingText='Redeeming'>Redeem</Button>
-                </Tooltip>
-                <Tooltip label={`If you extend the end time of this NFT-721, your fans could use the NFT-721 for longer.`}>
-                  <Button colorScheme='teal' variant='outline' disabled={account !== nftOwner} onClick={modal1.onOpen}>Extend End Time</Button>
-                </Tooltip>
-              </HStack>
-            </Box>
-          </SimpleGrid> 
-          :
-          null
-      }
+      </HStack> 
     </Box>
     <Modal
       initialFocusRef={initialRef}
@@ -262,7 +262,7 @@ const KOLNFTCard: FC<KOLNFTInfo> = ({ nftOwner, nft721Id, endTime, maxFansNumber
         </ModalBody>
 
         <ModalFooter>
-          <Button colorScheme='blue' mr={3} onClick={extendEndTime} isLoading={isComfirming} loadingText='Comfirming'>
+          <Button colorScheme='blue' mr={3} onClick={() => {}} isLoading={isComfirming} loadingText='Comfirming'>
             Comfirm
           </Button>
           <Button onClick={modal1.onClose}>Cancel</Button>
@@ -273,4 +273,4 @@ const KOLNFTCard: FC<KOLNFTInfo> = ({ nftOwner, nft721Id, endTime, maxFansNumber
   );
 };
 
-export default KOLNFTCard;
+export default ScriptCard;
