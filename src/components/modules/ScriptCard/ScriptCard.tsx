@@ -16,18 +16,19 @@ import {
   ModalCloseButton,
   FormControl,
   FormLabel,
-  Input,
+  Textarea,
   Avatar,
 } from '@chakra-ui/react';
 import { TbDeviceHeartMonitor } from 'react-icons/tb';
-import { MdOutlineDescription } from 'react-icons/md';
+import { MdOutlineDescription, MdOutlineDeleteForever } from 'react-icons/md';
 import { SiBlockchaindotcom } from 'react-icons/si';
 import { BiPencil } from 'react-icons/bi';
 import { VscDebugStart, VscDebugStop, VscDebugPause, VscDebugRestart } from 'react-icons/vsc';
-import React, { FC, useEffect, useState} from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { useWeb3React } from "@web3-react/core";
 import { useRouter } from 'next/router';
 import { isEmptyObj, getSpanTime } from 'utils/utils';
+import { evmChainIds } from 'utils/config';
 import { ETHLogo, BSCLogo, AvaxLogo, PolygonLogo, ArbitrumLogo, OptimismLogo } from 'utils/chainLogos';
 
 type ScriptInfo = {
@@ -58,7 +59,7 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
     const chainIds: any = {};
     entries.map((entry: any) => {
       const subScript = entry[1];
-      const chainId = subScript.chain;
+      const chainId = subScript.chainContractConfig.chain;      
       if (isEmptyObj(chainIds[chainId])) {
         chainIds[chainId] = true;
       }
@@ -69,12 +70,17 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
   const [subScriptNum, setSubScriptNum] = useState<number>(num);
   const [chainList, setChainList] = useState<number[]>(chainIdList);
   const [curStatus, setCurStatus] = useState<ScriptStatus>(ScriptStatus.Idle);
+  const [logDisplay, setLogDisplay] = useState<boolean>(false);
+  const [log, setLog] = useState<string>('no log');
 
   const modal1 = useDisclosure();
-  const chainLogo: Record<number, any> = {1: <ETHLogo />, 5: <ETHLogo />, 10: <OptimismLogo />, 97: <BSCLogo />, 
+  const chainLogo: Record<number, any> = {1: <ETHLogo />, 5: <ETHLogo />, 10: <OptimismLogo />, 
+                     56: <BSCLogo />,  97: <BSCLogo />, 
                      42161: <ArbitrumLogo />, 42170: <ArbitrumLogo />, 43114: <AvaxLogo />, 
                      80001: <PolygonLogo />}
 
+  const router = useRouter();
+  
   useEffect(() => {
     
   });
@@ -137,10 +143,11 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
   const getChainLogoList = () => {
     return chainList.map((chainId: number) => {
       const logo = chainLogo[chainId];
+      const chainName = evmChainIds[parseInt(chainId.toString())];
       if (isEmptyObj(logo)) {
-        return <ETHLogo />;
+        return <Tooltip label={chainName}><ETHLogo /></Tooltip>;
       }
-      return logo;
+      return <Tooltip label={chainName}>{logo}</Tooltip>;
     });
   }
 
@@ -148,7 +155,7 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
   const [isComfirming, setIsComfirming] = useState<boolean>(false);
   const [totalSupplyInSlot, setTotalSupplyInSlot] = useState<number>(0);
   const [leftDays, setLeftDays] = useState<number>(0);
-  const [days, setDays] =useState<number>(0);
+  const [days, setDays] = useState<number>(0);
 
   const toast = useToast();
   const initialRef = React.useRef(null);
@@ -164,7 +171,7 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
   return (
     <>
     <Box bgColor={bgColor} padding={3} borderRadius="xl" borderWidth="1px" 
-         borderColor={borderColor} onClick={() => {}} cursor="pointer"
+         borderColor={borderColor} onClick={() => {router.push(`/script/scriptEditor?scriptName=${name}`)}} cursor="pointer"
          _hover={{
           textDecoration: 'none',
           borderColor: linkActiveColor,
@@ -182,10 +189,19 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
               <Button 
                 ml={1}
                 cursor="point"
-                size={2}
-                colorScheme='blue' 
+                size={'2'}
+                colorScheme='teal' 
                 variant='outline' 
                 leftIcon={<BiPencil />}/>
+            </Tooltip>
+            <Tooltip label={"delete this script"}>
+              <Button 
+                ml={1}
+                cursor="point"
+                size={'2'}
+                colorScheme='blue' 
+                variant='outline' 
+                leftIcon={<MdOutlineDeleteForever />}/>
             </Tooltip>
           </Box>
           <Box as="h4" noOfLines={1} fontSize="sm">   
@@ -193,7 +209,7 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
               <Tooltip label={"number of subscripts"}>
                 <Button 
                   size='xs'
-                  colorScheme='twitter' 
+                  colorScheme='teal' 
                   variant='outline'
                   leftIcon={<MdOutlineDescription />}>
                   {subScriptNum}   
@@ -217,7 +233,8 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
                   size='xs'
                   colorScheme='blue' 
                   variant='outline' 
-                  leftIcon={<TbDeviceHeartMonitor />}/>
+                  leftIcon={<TbDeviceHeartMonitor />}
+                  onClick={() => setLogDisplay(!logDisplay)}/>
               </Tooltip>
             </HStack>
           </Box>
@@ -233,6 +250,13 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
           {desc}
         </Box>
       </HStack>  
+      <HStack alignItems={'center'} justify={"center"} mt={5}>
+        <Textarea
+          display={logDisplay ? 'block' : 'none'}
+          value={log}
+          size='sm'
+        />
+      </HStack> 
       <HStack alignItems={'center'} justify={"flex-end"} mt={5}>
         <Box fontWeight="semibold" as="h4" fontSize="sm" noOfLines={1}>
           {getSpanTime(createdTime / 1000)}

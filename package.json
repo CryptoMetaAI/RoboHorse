@@ -12,6 +12,7 @@
     "deploypage": "gh-pages -d .next"
   },
   "dependencies": {
+    "@ant-design/icons": "^4.8.0",
     "@chakra-ui/icons": "^2.0.8",
     "@chakra-ui/react": "^2.2.8",
     "@emotion/react": "^11",
@@ -22,10 +23,13 @@
     "@web3uikit/core": "^0.1.5",
     "@web3uikit/icons": "^0.1.5",
     "@weknow/react-bubble-chart-d3": "^1.0.12",
+    "antd": "^5.0.7",
+    "array-move": "^4.0.0",
     "axios": "^0.27.2",
     "bignumber.js": "^9.1.0",
     "d3": "^7.6.1",
     "ethers": "^5.6.9",
+    "formik": "^2.2.9",
     "framer-motion": "^6",
     "moment": "^2.29.4",
     "moralis": "^2.0.3",
@@ -35,6 +39,7 @@
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "18.2.0",
     "react-icons": "^4.4.0",
+    "react-sortable-hoc": "^2.0.0",
     "wagmi": "^0.6.4",
     "web3": "^1.8.0"
   },
