@@ -1,5 +1,5 @@
 import { 
-  Box, HStack, VStack, Image, SimpleGrid, useColorModeValue, Tooltip, Button,
+  Box, HStack, VStack, Input, SimpleGrid, useColorModeValue, Tooltip, Button,
   NumberInput,
   NumberInputField,
   NumberInputStepper,
@@ -18,6 +18,7 @@ import {
   FormLabel,
   Textarea,
   Avatar,
+  Checkbox
 } from '@chakra-ui/react';
 import { TbDeviceHeartMonitor } from 'react-icons/tb';
 import { MdOutlineDescription, MdOutlineDeleteForever } from 'react-icons/md';
@@ -26,10 +27,13 @@ import { BiPencil } from 'react-icons/bi';
 import { VscDebugStart, VscDebugStop, VscDebugPause, VscDebugRestart } from 'react-icons/vsc';
 import React, { FC, useEffect, useState } from 'react';
 import { useWeb3React } from "@web3-react/core";
+import { ethers } from "ethers";
 import { useRouter } from 'next/router';
 import { isEmptyObj, getSpanTime } from 'utils/utils';
-import { evmChainIds } from 'utils/config';
+import { evmChainIds, accessManagerAddr } from 'utils/config';
 import { ETHLogo, BSCLogo, AvaxLogo, PolygonLogo, ArbitrumLogo, OptimismLogo } from 'utils/chainLogos';
+import AccessManager from 'abi/accessManager.json';
+import { getEllipsisTxt } from "utils/format";
 
 type ScriptInfo = {
   name: string;
@@ -50,10 +54,18 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
   const descBgColor = useColorModeValue('gray.100', 'gray.600');
   const linkActiveColor = useColorModeValue('gray.200', 'gray.600');
 
-  const { account, library: web3 } = useWeb3React();
+  const { chainId, account, library: web3 } = useWeb3React();
+  const [accessManager, setAccessManager] = useState<any>(null);
+
+  useEffect(() => {
+    if (web3 != null) {
+      setAccessManager(new web3.eth.Contract(AccessManager, accessManagerAddr[chainId as number]));
+    }
+  }, [web3])
+
   let num = 0;
   let chainIdList: number[] = [];
-  if (!isEmptyObj(scriptObj)) {
+  if (!isEmptyObj(scriptObj) && !isEmptyObj(scriptObj.subScripts)) {
     const entries = Object.entries(scriptObj.subScripts);
     num = entries.length;
     const chainIds: any = {};
@@ -72,6 +84,11 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
   const [curStatus, setCurStatus] = useState<ScriptStatus>(ScriptStatus.Idle);
   const [logDisplay, setLogDisplay] = useState<boolean>(false);
   const [log, setLog] = useState<string>('no log');
+  const [bFansNFT, setBFansNFT] = useState<boolean>(true);
+  const [fansNFTAddr, setFansNFTAddr] = useState<string>('');
+  const [slotId, setSlotId] = useState<number>(0);
+  const [minValue, setMinValue] = useState<number>(0);
+  const [isSavingScript, setIsSavingScript] = useState<boolean>(false);
 
   const modal1 = useDisclosure();
   const chainLogo: Record<number, any> = {1: <ETHLogo />, 5: <ETHLogo />, 10: <OptimismLogo />, 
@@ -81,10 +98,6 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
 
   const router = useRouter();
   
-  useEffect(() => {
-    
-  });
-
   const getScriptStatusButton = () => {
     switch(curStatus) {
       case ScriptStatus.Idle:
@@ -151,6 +164,96 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
     });
   }
 
+  const editScriptInfo = (e: any) => {
+    e.stopPropagation();
+  }
+
+  const deleteScript = (e: any) => {
+    e.stopPropagation();
+    const lsName = 'scriptList';
+    var scriptList = global.localStorage.getItem(lsName);
+    scriptList = JSON.parse(scriptList);
+    const index = scriptList.findIndex(script => script.name == name);
+    scriptList = [...scriptList?.slice(0, index), ...scriptList?.slice(index + 1)];
+    global.localStorage.setItem(lsName, JSON.stringify(scriptList));
+  }
+
+  const saveOnBlockchain = (e: any) => {
+    e.stopPropagation();
+    modal1.onOpen();
+  }
+
+  const saveScript = () => {
+    const hexName = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(name));
+    const hexScript = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(JSON.stringify(scriptObj)));
+
+    if (bFansNFT) {
+      const contractFunc = accessManager.methods['saveScriptWithCondition']; 
+      const data = contractFunc(hexName, hexScript, fansNFTAddr, slotId, minValue).encodeABI();
+      const tx = {
+          from: account,
+          to: accessManager._address,
+          data,
+          value: 0,
+          gasLimit: 0
+      }
+      contractFunc(hexName, hexScript, fansNFTAddr, slotId, minValue).estimateGas({from: account}).then((gasLimit: any) => {
+        tx.gasLimit = gasLimit;
+        web3.eth.sendTransaction(tx)
+            .on('transactionHash', () => {
+              setIsSavingScript(true);
+            })
+            .on('receipt', () => {
+              modal1.onClose();
+              setIsSavingScript(false);
+            })
+            .on('error', () => {
+              setIsSavingScript(false);
+              toast({
+                title: 'Failed',
+                description: "Save script failed.",
+                status: 'error',
+                position: 'bottom-right',
+                isClosable: true,
+              });
+            });
+      });
+    } else {
+      const contractFunc = accessManager.methods['saveScript']; 
+      const data = contractFunc(hexName, hexScript).encodeABI();
+      const tx = {
+          from: account,
+          to: accessManager._address,
+          data,
+          value: 0,
+          gasLimit: 0
+      }
+      contractFunc(hexName, hexScript).estimateGas({from: account}).then((gasLimit: any) => {
+        tx.gasLimit = gasLimit;
+        web3.eth.sendTransaction(tx)
+            .on('transactionHash', () => {
+              setIsSavingScript(true);
+            })
+            .on('receipt', () => {
+              modal1.onClose();
+              setIsSavingScript(false);
+            })
+            .on('error', () => {
+              setIsSavingScript(false);
+              toast({
+                title: 'Failed',
+                description: "Save script failed.",
+                status: 'error',
+                position: 'bottom-right',
+                isClosable: true,
+              });
+            });
+      });
+    }
+  }
+
+  
+
   const [isRedeeming, setIsRedeeming] = useState<boolean>(false);
   const [isComfirming, setIsComfirming] = useState<boolean>(false);
   const [totalSupplyInSlot, setTotalSupplyInSlot] = useState<number>(0);
@@ -184,7 +287,7 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
         </Avatar>
         <VStack align='stretch'>
           <Box fontWeight="semibold" as="h4" noOfLines={1}>
-            {name}
+            {name.split('-')[0]}
             <Tooltip label={"modify script name/description"}>
               <Button 
                 ml={1}
@@ -192,7 +295,9 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
                 size={'2'}
                 colorScheme='teal' 
                 variant='outline' 
-                leftIcon={<BiPencil />}/>
+                leftIcon={<BiPencil />}
+                onClick={(e: any) => editScriptInfo(e)}
+              />
             </Tooltip>
             <Tooltip label={"delete this script"}>
               <Button 
@@ -201,8 +306,13 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
                 size={'2'}
                 colorScheme='blue' 
                 variant='outline' 
-                leftIcon={<MdOutlineDeleteForever />}/>
+                leftIcon={<MdOutlineDeleteForever />}
+                onClick={(e: any) => deleteScript(e)}
+              />
             </Tooltip>
+          </Box>
+          <Box fontWeight="semibold" as="h4" noOfLines={1}>
+            {name.split('-').length > 1 ? 'Author:' + getEllipsisTxt(name.split('-')[1]) : null}
           </Box>
           <Box as="h4" noOfLines={1} fontSize="sm">   
             <HStack>
@@ -221,7 +331,9 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
                   size='xs'
                   colorScheme='pink' 
                   variant='outline' 
-                  leftIcon={<SiBlockchaindotcom />}>
+                  leftIcon={<SiBlockchaindotcom />}
+                  onClick={(e: any) => saveOnBlockchain(e)}
+                >
                 </Button>
               </Tooltip>
               {
@@ -270,13 +382,30 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
     >
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Extend End Time</ModalHeader>
+        <ModalHeader>Save Script to Blockchain</ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={6}>
             <FormControl>
-              <FormLabel>How many days do you wanna extend?</FormLabel>
-              <NumberInput step={1} defaultValue={0} min={1}>
-                <NumberInputField onChange={(e) => setDays(parseInt(e.target.value))} value={days}/>
+              <Checkbox defaultChecked onChange={(e) => setBFansNFT(e.target.checked)}>Only fans could access</Checkbox>
+            </FormControl>
+            <FormControl>
+              <FormLabel>FansNFT address</FormLabel>
+              <Input disabled={!bFansNFT} onChange={(e) => setFansNFTAddr(e.target.value)} value={fansNFTAddr}/>
+            </FormControl>
+            <FormControl>
+              <FormLabel>Slot Id</FormLabel>
+              <NumberInput disabled={!bFansNFT}  step={1} defaultValue={0} min={1}>
+                <NumberInputField onChange={(e) => setSlotId(parseInt(e.target.value))} value={slotId}/>
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
+            </FormControl>
+            <FormControl>
+              <FormLabel>Min Value</FormLabel>
+              <NumberInput disabled={!bFansNFT}  step={1} defaultValue={0} min={1}>
+                <NumberInputField onChange={(e) => setMinValue(parseInt(e.target.value))} value={minValue}/>
                 <NumberInputStepper>
                   <NumberIncrementStepper />
                   <NumberDecrementStepper />
@@ -286,8 +415,8 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
         </ModalBody>
 
         <ModalFooter>
-          <Button colorScheme='blue' mr={3} onClick={() => {}} isLoading={isComfirming} loadingText='Comfirming'>
-            Comfirm
+          <Button colorScheme='blue' mr={3} onClick={() => saveScript()} isLoading={isSavingScript} loadingText='Uploading'>
+            Upload
           </Button>
           <Button onClick={modal1.onClose}>Cancel</Button>
         </ModalFooter>

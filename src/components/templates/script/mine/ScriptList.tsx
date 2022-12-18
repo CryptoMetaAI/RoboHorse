@@ -31,7 +31,6 @@ const ScriptList: FC = () => {
 
   const lsName = 'scriptList';
 
-
   useEffect(() => {
     var scriptsInfo = global.localStorage.getItem(lsName);
     if (isEmptyObj(scriptsInfo)) {
