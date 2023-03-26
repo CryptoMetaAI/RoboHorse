@@ -1,6 +1,8 @@
 import * as utils from '../utils/utils.js';
 import BigNumber from 'bignumber.js';
 import Web3 from 'web3';
+import ArbDistributorABI from './ArbDistributor.json' assert { type: 'json' };
+import Addresses from './arbAddr.json' assert { type: 'json' };
 
 class EVMChain {
   constructor(name, chainId, rpc, wssRPC, eip1559, wallet) {
@@ -53,7 +55,7 @@ class EVMChain {
 
   startMonitor() {
     if (this.hasMonitored) return;
-    this.syncPendingTx();
+    //this.syncPendingTx();
     //this.syncLastestBlock();
     this.syncNewBlock();
     this.hasMonitored = true;
@@ -504,23 +506,36 @@ class EVMChain {
   getWeb3() {
     return this.web3;
   }
+
+  async checkAddressArb() {
+    var contract = new this.web3.eth.Contract(ArbDistributorABI, '0x67a24CE4321aB3aF51c2D0a4801c3E111D88C9d9');
+    const contractFunc = contract.methods['claimableTokens'];
+    let count = 636;
+    let totalAmount = 0;
+    for (let i = 0; i < Addresses.length; i++) {
+      if (i < 2504) continue;
+      const address = Addresses[i];
+      const result = await contractFunc(address).call({ from: '0x912ce59144191c1204e64559fe8253a0e49e6548' });
+      const amount = new BigNumber(result).shiftedBy(-18).toNumber();
+      console.log(i, address, amount);
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  }
 }
 
-const ethereumBlockPi = new EVMChain(
-  'ethereum-blockpi',
+// ARB合约： 0x912ce59144191c1204e64559fe8253a0e49e6548
+// TokenDistributor: 0x67a24CE4321aB3aF51c2D0a4801c3E111D88C9d9
+// inbox proxy: 0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f
+// inbox: https://etherscan.io/address/0x5aed5f8a1e3607476f1f81c3d8fe126deb0afe94#code
+// start block: 16890400  Mar 23 2023 20:59:16
+const arbBlockPi = new EVMChain(
+  'arbitrum-blockpi',
   1,
-  'https://ethereum.blockpi.network/v1/rpc/b29e4d758236bccac31683408ffa266e41b7b463', //'https://eth-goerli.alchemyapi.io/v2/AxnmGEYn7VDkC4KqfNSFbSW9pHFR7PDO', //'https://eth-mainnet.g.alchemy.com/v2/v0PproF8lbsKkBDLqruaGyMq2OK-3_f5',//'https://mainnet.infura.io/v3/e95c3e3d2d81441a8552117699ffa5bd', //
-  'wss://ethereum.blockpi.network/v1/ws/b29e4d758236bccac31683408ffa266e41b7b463', // 'wss://eth-goerli.ws.alchemyapi.io/v2/AxnmGEYn7VDkC4KqfNSFbSW9pHFR7PDO', //'wss://eth-mainnet.g.alchemy.com/v2/v0PproF8lbsKkBDLqruaGyMq2OK-3_f5',//'wss://mainnet.infura.io/ws/v3/e95c3e3d2d81441a8552117699ffa5bd',  //
+  'https://arbitrum.blockpi.network/v1/rpc/*',
+  'wss://arbitrum.blockpi.network/v1/ws/*',
   true,
 );
-ethereumBlockPi.startMonitor();
-
-// const ethereumChainstack = new EVMChain('ethereum-chainstack',
-//                               1,
-//                               'https://', //
-//                               'wss://',
-//                               true);
-// ethereumChainstack.startMonitor();
+arbBlockPi.startMonitor();
 
 // ethereumBlockPi.addGasMonitoredPendingTx('0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D', '0x38ed1739', 'UniswapV2Router02: swapExactTokensForTokens');
 // ethereumBlockPi.addGasMonitoredPendingTx('0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45', '0x5ae401dc', 'SwapRouter02: Multicall');
