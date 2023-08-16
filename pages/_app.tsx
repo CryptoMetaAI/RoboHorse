@@ -13,7 +13,7 @@ import "./style.css";
 
 const chains = [arbitrum, mainnet, polygon]
 const { publicClient } = configureChains(chains, [publicProvider()]);
-const projectId = 'YOUR_PROJECT_ID'
+const projectId = 'a2e9ac1b7b3d06d6f1322a7a39f20132'
 
 const wagmiConfig = createConfig({
   autoConnect: true,
