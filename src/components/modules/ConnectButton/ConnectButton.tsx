@@ -4,7 +4,7 @@ import React from 'react';
 import { InjectedConnector } from '@web3-react/injected-connector';
 import { useWeb3React, initializeConnector } from "@web3-react/core";
 import { WalletConnect as WalletConnectV2 } from '@web3-react/walletconnect-v2';
-import { useWeb3Modal } from '@web3modal/react'
+import { useWeb3Modal, Web3Button, Web3NetworkSwitch } from '@web3modal/react'
 
 const ConnectButton = () => {
   const { active, account, library, chainId, activate, deactivate } = useWeb3React()
@@ -48,11 +48,10 @@ const ConnectButton = () => {
   }
 
   return (
-    <Tooltip label={'Current supported network: Arbitrum-One/Nova, Optimism and BSC-Testnet.'}>
-      <Button onClick={() => open()} colorScheme='teal' variant='outline'>
-        Connect Wallet
-      </Button>  
-    </Tooltip>  
+    <HStack>
+      <Web3NetworkSwitch />
+      <Web3Button /> 
+    </HStack> 
   );
 };
 

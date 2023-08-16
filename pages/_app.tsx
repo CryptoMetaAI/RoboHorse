@@ -11,9 +11,12 @@ import { Web3Modal } from '@web3modal/react'
 import Web3 from 'web3';
 import "./style.css";
 
+require('dotenv').config();
+
 const chains = [arbitrum, mainnet, polygon]
 const { publicClient } = configureChains(chains, [publicProvider()]);
-const projectId = 'a2e9ac1b7b3d06d6f1322a7a39f20132'
+const projectId = "a2e9ac1b7b3d06d6f1322a7a39f20132" // process.env.REACT_APP_WcProjectID
+//console.log('projectID', process.env, projectId)
 
 const wagmiConfig = createConfig({
   autoConnect: true,
@@ -43,7 +46,13 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
             <Component {...pageProps} />
           </SessionProvider>
         </WagmiConfig>
-        <Web3Modal projectId={projectId} ethereumClient={ethereumClient} />
+        <Web3Modal 
+          themeVariables={{
+            '--w3m-font-family': 'Roboto, sans-serif',
+            '--w3m-accent-color': 'gray.500'
+          }} 
+          projectId={projectId} 
+          ethereumClient={ethereumClient} />
       </ChakraProvider>
     </Web3ReactProvider>
   );
