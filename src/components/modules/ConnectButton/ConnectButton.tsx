@@ -2,11 +2,13 @@ import { Button, Text, HStack, Avatar, Tooltip } from '@chakra-ui/react';
 import { getEllipsisTxt } from 'utils/format';
 import React from 'react';
 import { InjectedConnector } from '@web3-react/injected-connector';
-import { useWeb3React } from "@web3-react/core";
-
+import { useWeb3React, initializeConnector } from "@web3-react/core";
+import { WalletConnect as WalletConnectV2 } from '@web3-react/walletconnect-v2';
+import { useWeb3Modal } from '@web3modal/react'
 
 const ConnectButton = () => {
   const { active, account, library, chainId, activate, deactivate } = useWeb3React()
+  const { open, close } = useWeb3Modal()
  
   const injected = new InjectedConnector({
     supportedChainIds: [1, 5, 97, 10, 42161, 42170],
@@ -47,7 +49,7 @@ const ConnectButton = () => {
 
   return (
     <Tooltip label={'Current supported network: Arbitrum-One/Nova, Optimism and BSC-Testnet.'}>
-      <Button onClick={() => wallet()} colorScheme='teal' variant='outline'>
+      <Button onClick={() => open()} colorScheme='teal' variant='outline'>
         Connect Wallet
       </Button>  
     </Tooltip>  

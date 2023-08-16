@@ -65,7 +65,7 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
 
   let num = 0;
   let chainIdList: number[] = [];
-  if (!isEmptyObj(scriptObj) && !isEmptyObj(scriptObj.subScripts)) {
+  if (!isEmptyObj(scriptObj) && !isEmptyObj(scriptObj.subScripts)) {    
     const entries = Object.entries(scriptObj.subScripts);
     num = entries.length;
     const chainIds: any = {};
@@ -98,6 +98,20 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
 
   const router = useRouter();
   
+
+  const changeScriptStatus = (e: any, state: ScriptStatus) => {
+    e.stopPropagation();
+    setCurStatus(state);
+    switch(curStatus) {
+      case ScriptStatus.Idle:
+        break;
+      case ScriptStatus.Running:
+        break;
+      case ScriptStatus.Pause:
+        break;
+    }
+  }
+
   const getScriptStatusButton = () => {
     switch(curStatus) {
       case ScriptStatus.Idle:
@@ -107,7 +121,7 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
                   colorScheme='yellow' 
                   variant='outline' 
                   leftIcon={<VscDebugStart />}
-                  onClick={() => setCurStatus(ScriptStatus.Running)}/>
+                  onClick={(e: any) => changeScriptStatus(e, ScriptStatus.Running)}/>
               </Tooltip>
         break;
       case ScriptStatus.Running:
@@ -118,7 +132,7 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
                   colorScheme='yellow' 
                   variant='outline' 
                   leftIcon={<VscDebugPause />}
-                  onClick={() => setCurStatus(ScriptStatus.Pause)}/>
+                  onClick={(e: any) => changeScriptStatus(e, ScriptStatus.Pause)}/>
               </Tooltip>
               <Tooltip label={"stop this script"}>
                 <Button 
@@ -126,7 +140,7 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
                   colorScheme='yellow' 
                   variant='outline' 
                   leftIcon={<VscDebugStop />}
-                  onClick={() => setCurStatus(ScriptStatus.Idle)}/>
+                  onClick={(e: any) => changeScriptStatus(e, ScriptStatus.Idle)}/>
               </Tooltip>
           </>
         break;
@@ -138,7 +152,7 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
                   colorScheme='yellow' 
                   variant='outline' 
                   leftIcon={<VscDebugRestart />}
-                  onClick={() => setCurStatus(ScriptStatus.Running)}/>
+                  onClick={(e: any) => changeScriptStatus(e, ScriptStatus.Running)}/>
               </Tooltip>
               <Tooltip label={"stop this script"}>
                 <Button 
@@ -146,7 +160,7 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
                   colorScheme='yellow' 
                   variant='outline' 
                   leftIcon={<VscDebugStop />}
-                  onClick={() => setCurStatus(ScriptStatus.Idle)}/>
+                  onClick={(e: any) => changeScriptStatus(e, ScriptStatus.Idle)}/>
               </Tooltip>
           </>
         break;
@@ -346,7 +360,7 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
                   colorScheme='blue' 
                   variant='outline' 
                   leftIcon={<TbDeviceHeartMonitor />}
-                  onClick={() => setLogDisplay(!logDisplay)}/>
+                  onClick={(e: any) => { e.stopPropagation(); setLogDisplay(!logDisplay)}}/>
               </Tooltip>
             </HStack>
           </Box>
@@ -365,6 +379,7 @@ const ScriptCard: FC<ScriptInfo> = ({ name, desc, createdTime, scriptObj }) => {
       <HStack alignItems={'center'} justify={"center"} mt={5}>
         <Textarea
           display={logDisplay ? 'block' : 'none'}
+          onChange={() => setLog(log)}
           value={log}
           size='sm'
         />

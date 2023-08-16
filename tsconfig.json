@@ -15,8 +15,18 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "baseUrl": "./src"
+    "baseUrl": "./src",
+    "paths": {
+      "@icon/*": ["assets/icons/*"]
+    },
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "src/utils/chainLogos.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "src/utils/chainLogos.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

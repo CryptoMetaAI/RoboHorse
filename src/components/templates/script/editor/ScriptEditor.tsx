@@ -471,12 +471,13 @@ const ScriptEditor: FC = () => {
 
     const syncABI = () => {
         if (BroswerScan[currentChain] == null) {
-            Modal.warning({title: 'Warning', content: 'No web service to get the ABI on this chain, please manually input the ABI'});
+            Modal.warning({title: 'Warning', content: `No web service to get the ABI on this chain(id: ${currentChain}), please manually input the ABI`});
             return;
         }
         const getValidABIUrl = getABIUrl.replace('{scanUrl}', BroswerScan[currentChain].webUrl)
                                         .replace('{apiKey}', BroswerScan[currentChain].apiKey)
                                         .replace('{contractAddr}', contractAddr);
+        console.log(getValidABIUrl);
         fetch(getValidABIUrl, {}).then(resp => {
             resp.json().then(abiInfo => {
               if (abiInfo.status === '1') {

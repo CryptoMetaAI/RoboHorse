@@ -2,11 +2,11 @@ export const resolveIPFS = (url?: string) => {
   if (!url || !url.includes('ipfs://')) {
     return url;
   }
-  return url.replace('ipfs://', 'https://ipfs.fleek.co/ipfs/');
+  return url.replace('ipfs://', 'https://cryptometa.infura-ipfs.io/ipfs/');
 };
 
 export const getImageInfo = async (tokenURI: string) => {    
-  const ipfsGateway = 'https://ipfs.fleek.co/ipfs/';
+  const ipfsGateway = 'https://cryptometa.infura-ipfs.io/ipfs/';
   const svgPrefix = 'data:application/json;base64,';
   const ipfsPrefix = 'ipfs://';
   if (tokenURI.startsWith(svgPrefix)) {

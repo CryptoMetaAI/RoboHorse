@@ -8,6 +8,9 @@ const BigNumber = require('bignumber.js');
 const ValueType = {from: 1, to: 2, value: 3, gasPrice: 4, parameter: 5}
 const timeInterval = {1: 8}
 
+/*
+
+*/
 class AutoEngine {
     constructor(scriptConfigInfo, networkCenter, wallet) {
         this.subscripts = scriptConfigInfo.subScripts;

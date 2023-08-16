@@ -1,5 +1,6 @@
 import BinancePairs from 'asset/BinancePairs.json';
 
+
 const xenAddr: Record<number, string> = {1: '', 10: '0xED78Df1176B02D293aB3862962d6306B3E049140', 97: '0xf6c2dD2616641F2C98cf379b02a565b01c08D4Ac', 42161: '0x03436a2E91b1DA5B8a7fE0D7DDCa29C1d99858D4', 42170: '0xcD7a02e76E2dfDf51f18172f61Bc7F052969DEBf'}
 const xNFTAddr: Record<number, string> = {1: '', 10: '0x5890d7C746bF3209830D19b9F78fE5Cb48B3B7fc', 97: '0x3D01d388829771A4DaA9aE48291487c9b4e73dfa', 42161: '0xB5F69e63d480b11e5b77a09FAE26FE12f86bd78e', 42170: '0x45f8557bbfA0dDF90A3B4E3f97e0E72648839638'}
 const rewardCalculatorAddr: Record<number, string> = {1: '', 10: '0x05c168ED7B6d2e5728673290ae3A30Be3c83fdcc', 97: '0x8E8D032040B64a4CE7bf9631338F1E7b8Ea9511f', 513100: '', 42161: '0x1f11fA49735FCF151b1d716e4E6785A59c0BC77D', 42170: '0x3C2438fC7F9e552037ce5F817BF3072aDD5Ab474'}
@@ -46,9 +47,10 @@ const evmChainIds: Record<number, string> = {
 };
 
 const BroswerScan: Record<number, any> = {
-  1: {'webUrl': 'https://api.etherscan.io', 'apiKey': 'RQ1U2VU9D1HJ2XWPV8IRS373MKNRAXYIW4'},
-  56: {'webUrl': 'https://api.bscscan.com', 'apiKey': 'H2IWZB1394DTNP1RF2C18M7XYPU8WC55FC'},
-  137: {'webUrl': 'https://api.polygonscan.com', 'apiKey': 'TP3C9EXNAKNIM82G612I4WIFRG8M6V6I8Y'}
+  1: {'webUrl': 'https://api.etherscan.io', 'apiKey': process.env.REACT_APP_ETHScanApiKey},
+  56: {'webUrl': 'https://api.bscscan.com', 'apiKey': process.env.REACT_APP_BSCScanApiKey},
+  137: {'webUrl': 'https://api.polygonscan.com', 'apiKey': process.env.REACT_APP_PolygonScanApiKey},
+  42161: {'webUrl': 'https://api.arbiscan.io', 'apiKey': process.env.REACT_APP_ArbScanApiKey}
 }
 const getABIUrl: string = '{scanUrl}/api?module=contract&action=getabi&apikey={apiKey}&address={contractAddr}';
 
