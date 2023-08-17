@@ -5,9 +5,9 @@ const Footer = () => {
   return (
     <Box textAlign={'center'} w="full" p={6}>      
       <Text>
-        <Link href={"https://twitter.com/0xmetazen"} isExternal alignItems={'center'}>
+        {/* <Link href={"https://twitter.com/0xmetazen"} isExternal alignItems={'center'}>
           Buidler <ExternalLinkIcon />
-        </Link>
+        </Link> */}
         {'  |  '}
         <Link href={"https://github.com/syslink/robohorse"} isExternal alignItems={'center'}>
           Github <ExternalLinkIcon />

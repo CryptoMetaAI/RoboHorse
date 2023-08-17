@@ -1220,7 +1220,7 @@ const ScriptEditor: FC = () => {
                     <h2>
                         <AccordionButton>
                             <Box as="span" flex='1' textAlign='left'>
-                            Send Telegram Message / Record information to DB
+                            Send Telegram Message / Record information to DB / Feeding data to an AI agent
                             </Box>
                             <AccordionIcon />
                         </AccordionButton>
@@ -1228,7 +1228,8 @@ const ScriptEditor: FC = () => {
                     <AccordionPanel pb={4}>
                         <HStack spacing='24px'>
                             <Button colorScheme='teal' variant='solid' onClick={() => addScript('tgMsg', 'Send Telegram Message', 2)}>Send Telegram Message</Button>
-                            <Button colorScheme='teal' variant='solid'>Record information</Button>
+                            <Button colorScheme='teal' variant='solid'>Record DB</Button>
+                            <Button colorScheme='teal' variant='solid'>Feeding Agent</Button>
                         </HStack>
                         <p/>
                         <Space wrap>

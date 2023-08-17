@@ -12,7 +12,7 @@ const Header = () => {
           <NavBar />
           <HStack gap={'10px'}>
             <ConnectButton />
-            <ColorModeButton />
+            {/* <ColorModeButton /> */}
           </HStack>
         </Flex>
       </Container>

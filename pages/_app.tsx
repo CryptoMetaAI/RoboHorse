@@ -1,6 +1,6 @@
 import { ChakraProvider } from '@chakra-ui/react';
 import { createConfig, configureChains, WagmiConfig } from 'wagmi';
-import { arbitrum, mainnet, polygon } from 'wagmi/chains'
+import { arbitrum, mainnet, polygon, goerli, optimism, zkSync, zkSyncTestnet, polygonZkEvm, polygonZkEvmTestnet } from 'wagmi/chains'
 import { EthereumClient, w3mConnectors, w3mProvider } from '@web3modal/ethereum'
 import { extendTheme } from '@chakra-ui/react';
 import { publicProvider } from 'wagmi/providers/public';
@@ -13,7 +13,7 @@ import "./style.css";
 
 require('dotenv').config();
 
-const chains = [arbitrum, mainnet, polygon]
+const chains = [arbitrum, mainnet, polygon, goerli, optimism, zkSync, zkSyncTestnet, polygonZkEvm, polygonZkEvmTestnet]
 const { publicClient } = configureChains(chains, [publicProvider()]);
 const projectId = "a2e9ac1b7b3d06d6f1322a7a39f20132" // process.env.REACT_APP_WcProjectID
 //console.log('projectID', process.env, projectId)
